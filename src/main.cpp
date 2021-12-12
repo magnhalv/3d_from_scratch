@@ -1,49 +1,37 @@
 #include <stdio.h>
 #include <SDL2/SDL.h>
+#include <math.h>
 
-typedef uint32_t u32;
-typedef int32_t i32;
-typedef uint8_t u8;
-typedef int8_t i8;
-typedef float f32;
-typedef double f64;
+#include "display.h"
+#include "vector.h"
 
-SDL_Window *window;
-SDL_Renderer *renderer;
+const u32 CUBE_DIM = 9;
+const u32 N_POINTS = CUBE_DIM * CUBE_DIM * CUBE_DIM;
+vec3 cube_points[N_POINTS];
+
 bool is_running;
-u32 *color_buffer;
 
-const u32 WINDOW_HEIGHT = 600;
-const u32 WINDOW_WIDTH = 800;
+void setup(void)
+{
+    color_buffer = (u32 *)malloc(sizeof(u32) * window_width * window_height);
+    color_buffer_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, window_width, window_height);
 
-bool initialize_window() {
-    if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
-        fprintf(stderr, "Error initializing SDL.\n");
-        return false;
+    int point_count = 0;
+    for (f32 x = -1.0; x <= 1.0; x += 0.25)
+    {
+        for (f32 y = -1.0; y <= 1.0; y += 0.25)
+        {
+            for (f32 z = -1.0; z <= 1.0; z += 0.25)
+            {
+                vec3 new_point = { .x = x, .y = y, .z = z};
+                cube_points[point_count++] = new_point;
+            }
+        }
     }
-
-    window = SDL_CreateWindow(NULL, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_BORDERLESS);
-
-    if (!window) {
-        fprintf(stderr, "Error creating SDL window.\n");
-        return false;
-    }
-
-    renderer = SDL_CreateRenderer(window, -1, 0);
-
-    if (!renderer) {
-        fprintf(stderr, "Error creating SDL renderer.\n");
-        return false;
-    }
-
-    return true;
 }
 
-void setup(void) {
-    color_buffer = (u32*) callco(sizeof(u32)*WINDOW_WIDTH*WINDOW_HEIGHT);
-} 
-
-void process_input(void) {
+void process_input(void)
+{
     SDL_Event event;
     SDL_PollEvent(&event);
 
@@ -51,9 +39,10 @@ void process_input(void) {
     {
     case SDL_QUIT:
         is_running = false;
-        break;    
-    case SDL_KEYDOWN: 
-        if (event.key.keysym.sym == SDLK_ESCAPE) {
+        break;
+    case SDL_KEYDOWN:
+        if (event.key.keysym.sym == SDLK_ESCAPE)
+        {
             is_running = false;
         }
         break;
@@ -62,36 +51,36 @@ void process_input(void) {
     }
 }
 
-void update(void) {
-
+void update(void)
+{
 }
 
-void render(void) {
+void render(void)
+{
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
     SDL_RenderClear(renderer);
 
+    render_color_buffer();
+    draw_grid();
+    draw_rect(20, 20, 20, 20, 0xFFFF0000);
+    // clear_color_buffer(0xFFFFFF00);
     SDL_RenderPresent(renderer);
 }
 
-void destory_window(void) {
-    free(color_buffer);
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
-}
-
-int main(void) {
-    is_running = initialize_window();    
+int main(void)
+{
+    is_running = initialize_window();
 
     setup();
-    
-    while(is_running) {
+
+    while (is_running)
+    {
         process_input();
         update();
         render();
     }
 
-    destory_window();
+    destroy_window();
 
     return 0;
 }
