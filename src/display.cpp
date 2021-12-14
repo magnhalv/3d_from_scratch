@@ -1,5 +1,4 @@
 #include "display.h"
-#include <assert.h>
 
 u32 window_height = 600;
 u32 window_width = 800;
@@ -51,9 +50,10 @@ void render_color_buffer()
 
 inline void draw_pixel(u32 x, u32 y, u32 color)
 {
-    assert(x < window_width);
-    assert(y < window_height);
-    color_buffer[y * window_width + x] = color;
+    if((x >= 0 && x < window_width) && (y >= 0 && y < window_height)) {
+        color_buffer[y * window_width + x] = color;
+    }
+    
 }
 
 void clear_color_buffer(u32 color)
