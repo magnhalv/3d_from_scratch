@@ -5,6 +5,9 @@
 #include "display.h"
 #include "vector.h"
 
+#define FPS 120
+#define FRAME_TARGET_TIME (1000/FPS)
+
 const u32 CUBE_DIM = 9;
 const u32 N_POINTS = CUBE_DIM * CUBE_DIM * CUBE_DIM;
 vec3 cube_points[N_POINTS];
@@ -14,6 +17,8 @@ vec3 camera_pos = {.x = 0, .y = 0, .z = -5};
 vec3 cube_rotation = {.x = 0, .y = 0, .z = 0};
 
 f32 fov_factor = 640.0;
+
+i32 previous_frame_time = 0;
 
 bool is_running;
 
@@ -67,8 +72,8 @@ vec2 project(vec3 point)
 }
 
 void update(void)
-{
-    cube_rotation.x += 0.01;
+{    
+    cube_rotation.x += 0.00;
     cube_rotation.y += 0.01;    
     for (int i = 0; i < N_POINTS; i++)
     {
@@ -101,11 +106,21 @@ int main(void)
 
     setup();
 
+
     while (is_running)
     {
         process_input();
         update();
         render();
+
+        i32 time_to_wait = FRAME_TARGET_TIME - (SDL_GetTicks() - previous_frame_time);  
+        if (time_to_wait <= 0) {
+            fprintf(stdout, "Misssed frame target");
+        }
+        else if (time_to_wait <= FRAME_TARGET_TIME) {
+            SDL_Delay(time_to_wait);
+        }        
+        previous_frame_time = SDL_GetTicks();
     }
 
     destroy_window();
