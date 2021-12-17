@@ -4,14 +4,12 @@
 
 #include "display.h"
 #include "vector.h"
+#include "mesh.h"
 
-#define FPS 120
+#define FPS 60
 #define FRAME_TARGET_TIME (1000/FPS)
 
-const u32 CUBE_DIM = 9;
-const u32 N_POINTS = CUBE_DIM * CUBE_DIM * CUBE_DIM;
-vec3 cube_points[N_POINTS];
-vec2 projected_points[N_POINTS];
+triangle triangles_to_render[N_MESH_FACES];
 
 vec3 camera_pos = {.x = 0, .y = 0, .z = -5};
 vec3 cube_rotation = {.x = 0, .y = 0, .z = 0};
@@ -26,19 +24,6 @@ void setup(void)
 {
     color_buffer = (u32 *)malloc(sizeof(u32) * window_width * window_height);
     color_buffer_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, window_width, window_height);
-
-    int point_count = 0;
-    for (f32 x = -1.0; x <= 1.0; x += 0.25)
-    {
-        for (f32 y = -1.0; y <= 1.0; y += 0.25)
-        {
-            for (f32 z = -1.0; z <= 1.0; z += 0.25)
-            {
-                vec3 new_point = {.x = x, .y = y, .z = z};
-                cube_points[point_count++] = new_point;
-            }
-        }
-    }
 }
 
 void process_input(void)
@@ -72,27 +57,46 @@ vec2 project(vec3 point)
 }
 
 void update(void)
-{    
-    cube_rotation.x += 0.00;
-    cube_rotation.y += 0.01;    
-    for (int i = 0; i < N_POINTS; i++)
-    {
-        vec3 point = cube_points[i];
-        vec3 point2 = rotate_y(point, cube_rotation.y);
-        vec3 transformed_point = rotate_x(point2, cube_rotation.x);
-        transformed_point.z -= camera_pos.z;
-        vec2 projected_point = project(transformed_point);
-        projected_points[i] = projected_point;
+{     
+    cube_rotation.x += 0.001;
+    cube_rotation.y += 0.001;
+
+    for (int i = 0; i < N_MESH_FACES; i++) {
+        face mesh_face = mesh_faces[i];
+        vec3 face_verticies[3];
+        face_verticies[0] = mesh_vertices[mesh_face.a];
+        face_verticies[1] = mesh_vertices[mesh_face.b];
+        face_verticies[2] = mesh_vertices[mesh_face.c];
+
+        triangle projected_triangle;
+        for (int j = 0; j < 3; j++) {
+            vec3 transformed_vertex = face_verticies[j];
+
+            transformed_vertex = rotate_x(transformed_vertex, cube_rotation.x);
+            transformed_vertex = rotate_y(transformed_vertex, cube_rotation.y);
+
+            transformed_vertex.z -= camera_pos.z;
+
+            vec2 projected_point = project(transformed_vertex);
+
+            projected_point.x += (window_height/2);
+            projected_point.y += (window_height/2);
+
+            projected_triangle.points[j] = projected_point;
+        }
+        triangles_to_render[i] = projected_triangle;
     }
 }
 
 void render(void)
 {
     draw_grid();
-    for (int i = 0; i < N_POINTS; i++)
-    {
-        vec2 p = projected_points[i];
-        draw_rect(p.x + window_width / 2, p.y + window_height / 2, 4, 4, 0xFFFFFF00);
+
+    for (int i = 0; i < N_MESH_FACES; i++) {
+        triangle triangle = triangles_to_render[i];
+        draw_rect(triangle.points[0].x, triangle.points[0].y, 3, 3, 0xFFFFFF00);
+        draw_rect(triangle.points[1].x, triangle.points[1].y, 3, 3, 0xFFFFFF00);
+        draw_rect(triangle.points[2].x, triangle.points[2].y, 3, 3, 0xFFFFFF00);
     }
 
     render_color_buffer();
@@ -115,7 +119,7 @@ int main(void)
 
         i32 time_to_wait = FRAME_TARGET_TIME - (SDL_GetTicks() - previous_frame_time);  
         if (time_to_wait <= 0) {
-            fprintf(stdout, "Misssed frame target");
+            fprintf(stdout, "Misssed frame target\n");
         }
         else if (time_to_wait <= FRAME_TARGET_TIME) {
             SDL_Delay(time_to_wait);
