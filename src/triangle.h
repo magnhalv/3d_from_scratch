@@ -14,4 +14,4 @@ typedef struct {
     vec2 points[3];
 } triangle;
 
-#endif;
+#endif

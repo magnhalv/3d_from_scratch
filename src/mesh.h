@@ -11,4 +11,4 @@ extern vec3 mesh_vertices[N_MESH_VERITICES];
 
 extern face mesh_faces[N_MESH_FACES];
 
-#endif;
+#endif

@@ -58,8 +58,8 @@ vec2 project(vec3 point)
 
 void update(void)
 {     
-    cube_rotation.x += 0.001;
-    cube_rotation.y += 0.001;
+    cube_rotation.x += 0.01;
+    cube_rotation.y += 0.01;
 
     for (int i = 0; i < N_MESH_FACES; i++) {
         face mesh_face = mesh_faces[i];
@@ -90,13 +90,11 @@ void update(void)
 
 void render(void)
 {
-    draw_grid();
+    draw_grid();    
 
     for (int i = 0; i < N_MESH_FACES; i++) {
-        triangle triangle = triangles_to_render[i];
-        draw_rect(triangle.points[0].x, triangle.points[0].y, 3, 3, 0xFFFFFF00);
-        draw_rect(triangle.points[1].x, triangle.points[1].y, 3, 3, 0xFFFFFF00);
-        draw_rect(triangle.points[2].x, triangle.points[2].y, 3, 3, 0xFFFFFF00);
+        vec2 *points = triangles_to_render[i].points;        
+        draw_triangle(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y, 0xFFFFFF00);
     }
 
     render_color_buffer();
@@ -118,7 +116,7 @@ int main(void)
         render();
 
         i32 time_to_wait = FRAME_TARGET_TIME - (SDL_GetTicks() - previous_frame_time);  
-        if (time_to_wait <= 0) {
+        if (time_to_wait < 0) {
             fprintf(stdout, "Misssed frame target\n");
         }
         else if (time_to_wait <= FRAME_TARGET_TIME) {
