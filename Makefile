@@ -1,6 +1,6 @@
 build:
 	mkdir -p build
-	g++ -Wall -std=c++2a ./src/*.cpp -lSDL2 -o ./build/renderer
+	g++ -g -Wall -std=c++2a ./src/*.cpp -lSDL2 -o ./build/renderer
 
 run:
 	./build/renderer

@@ -15,6 +15,7 @@ vec2 add(vec2 lhs, vec2 rhs);
 vec2 multiply(vec2 v, f32 factor);
 vec2 divide(vec2 v, f32 factor);
 f32 dot(vec2 v, f32 factor);
+void normalize(vec2 *v);
 
 // 3D
 typedef struct {
@@ -33,5 +34,6 @@ vec3 multiply(vec3 v, f32 factor);
 vec3 divide(vec3 v, f32 factor);
 vec3 cross(vec3 a, vec3 b);
 f32 dot(vec3 a, vec3 b);
+void normalize(vec3 *v);
 
 #endif

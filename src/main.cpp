@@ -12,7 +12,7 @@
 
 std::vector<triangle> triangles_to_render;
 
-vec3 camera_pos = {.x = 0, .y = 0, .z = -5};
+vec3 camera_pos = {.x = 0, .y = 0, .z = 0.0};
 
 f32 fov_factor = 640.0;
 
@@ -24,7 +24,7 @@ void setup(void)
 {
     color_buffer = (u32 *)malloc(sizeof(u32) * window_width * window_height);
     color_buffer_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, window_width, window_height);
-    g_mesh = load_obj_file("./assets/f22.obj");
+    g_mesh = load_obj_file("./assets/cube.obj");
 }
 
 void process_input(void)
@@ -57,9 +57,25 @@ vec2 project(vec3 point)
     return projected_point;
 }
 
+bool should_clip(vec3 triangle[3]) {
+    vec3 a = subtract(triangle[1], triangle[0]);
+    normalize(&a);
+    vec3 b = subtract(triangle[2], triangle[0]);
+    normalize(&b);
+
+    vec3 normalv = cross(a, b);
+    normalize(&normalv);
+
+    vec3 camerav = subtract(camera_pos, triangle[0]);    
+    normalize(&camerav);
+    
+    f32 alignment = dot(camerav, normalv);    
+    return alignment < 0.0;
+}
+
 void update(void)
 {     
-    g_mesh.rotation.x = 3.14;
+    g_mesh.rotation.x += 0.01;
     g_mesh.rotation.y += 0.01;
     g_mesh.rotation.z = -0.2;
 
@@ -70,9 +86,9 @@ void update(void)
         vec3 face_verticies[3];
         face_verticies[0] = g_mesh.vertices[face.a];
         face_verticies[1] = g_mesh.vertices[face.b];
-        face_verticies[2] = g_mesh.vertices[face.c];
+        face_verticies[2] = g_mesh.vertices[face.c];        
 
-        triangle projected_triangle;
+        vec3 transformed_verticies[3];
         for (int j = 0; j < 3; j++) {
             vec3 transformed_vertex = face_verticies[j];
 
@@ -80,15 +96,25 @@ void update(void)
             transformed_vertex = rotate_y(transformed_vertex, g_mesh.rotation.y);
             transformed_vertex = rotate_z(transformed_vertex, g_mesh.rotation.z);
 
-            transformed_vertex.z -= camera_pos.z;
+            transformed_vertex.z += 5.0;
 
-            vec2 projected_point = project(transformed_vertex);
+            transformed_verticies[j] = transformed_vertex;    
+        }
+
+        if (should_clip(transformed_verticies)) {
+            continue;
+        }        
+
+        triangle projected_triangle;
+        for (int j = 0; j < 3; j++) {
+            vec2 projected_point = project(transformed_verticies[j]);
 
             projected_point.x += (window_height/2);
             projected_point.y += (window_height/2);
 
             projected_triangle.points[j] = projected_point;
         }
+
         triangles_to_render.push_back(projected_triangle);        
     }
 }

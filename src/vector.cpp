@@ -43,6 +43,12 @@ f32 dot(vec2 a, vec2 b) {
     return (a.x * b.x) + (a.y * b.y);
 }
 
+void normalize(vec2 *v) {
+    f32 mag = magnitude(*v);
+    v->x /= mag;
+    v->y /= mag;
+}
+
 /////////////
 // 3D
 /////////////
@@ -123,7 +129,13 @@ vec3 cross(vec3 a, vec3 b) {
 }
 
 f32 dot(vec3 a, vec3 b) {
-    return (a.x * b.x) + (a.y * b.y) + (a.z * a.z);
+    return (a.x * b.x) + (a.y * b.y) + (a.z * b.z);
 }
 
+void normalize(vec3 *v) {
+    f32 mag = magnitude(*v);
+    v->x /= mag;
+    v->y /= mag;
+    v->z /= mag;
+}
 
