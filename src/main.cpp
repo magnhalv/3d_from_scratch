@@ -24,7 +24,7 @@ void setup(void)
 {
     color_buffer = (u32 *)malloc(sizeof(u32) * window_width * window_height);
     color_buffer_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, window_width, window_height);
-    g_mesh = load_obj_file("./assets/cube.obj");
+    g_mesh = load_obj_file("./assets/f22.obj");
 }
 
 void process_input(void)
@@ -59,8 +59,9 @@ vec2 project(vec3 point)
 
 void update(void)
 {     
-    g_mesh.rotation.x += 0.01;
+    g_mesh.rotation.x = 3.14;
     g_mesh.rotation.y += 0.01;
+    g_mesh.rotation.z = -0.2;
 
     triangles_to_render.clear();
 
@@ -77,6 +78,7 @@ void update(void)
 
             transformed_vertex = rotate_x(transformed_vertex, g_mesh.rotation.x);
             transformed_vertex = rotate_y(transformed_vertex, g_mesh.rotation.y);
+            transformed_vertex = rotate_z(transformed_vertex, g_mesh.rotation.z);
 
             transformed_vertex.z -= camera_pos.z;
 
@@ -111,8 +113,7 @@ int main(void)
     is_running = initialize_window();
 
     setup();
-
-    is_running = false;
+ 
     while (is_running)
     {
         process_input();
@@ -121,7 +122,7 @@ int main(void)
 
         i32 time_to_wait = FRAME_TARGET_TIME - (SDL_GetTicks() - previous_frame_time);  
         if (time_to_wait < 0) {
-            fprintf(stdout, "Misssed frame target\n");
+            fprintf(stdout, "Misssed frame target by %d ms.\n", time_to_wait);
         }
         else if (time_to_wait <= FRAME_TARGET_TIME) {
             SDL_Delay(time_to_wait);

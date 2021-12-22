@@ -5,6 +5,7 @@
 #include "mesh.h"
 
 vec3 parse_vec_line(const char *line, i32 length);
+face parse_face_line(const char *line, i32 length);
 
 mesh g_mesh = {};
 
@@ -58,48 +59,30 @@ void load_cube_mesh(void) {
 mesh load_obj_file(const char *file_name) {
     mesh result = {};
 
-    std::fstream stream;
-
-    stream.open(file_name, std::ifstream::in);
-    for (std::string line; std::getline(stream, line);) {
+    
+    FILE *file;
+    file = fopen(file_name, "r");
+    char line[1024];
+    while (fgets(line, 1024, file)) {
         if (line[0] == 'v' && line[1] == ' ') {
-            vec3 vec = parse_vec_line(line.c_str(), line.size());
-            std::cout << vec.x << " " << vec.y << " " << vec.z << std::endl;
+            vec3 vec;
+            sscanf(line, "v %f %f %f", &vec.x, &vec.y, &vec.z);
+            result.vertices.push_back(vec);
 
         }
-        if (line[0] == 'f' && line[1] == ' ') {
-            //std::cout << line << std::endl;
-        }
-        
-    }
-
-    return result;
-}
-
-vec3 parse_vec_line(const char *line, i32 length) {
-    f32 values[3];
-    i32 index = 0;
-    const char *start = nullptr;
-    const char *end = nullptr;    
-    bool digit_found = false;    
-    for (int i = 0; i < length; i++) {
-        if (start && (line[i] == ' ' || i == length - 1)) {
-            values[index] = strtod(start, (char**)&end);
-            index++;
-            start = nullptr;
-            end = nullptr;
-            continue;
-        }
-
-        if (!start && (isdigit(line[i]) || line[i] == '-')) {
-            start = &line[i];
-        }
-
-        if (start) {
-            end = &line[i];
+        if (line[0] == 'f' && line[1] == ' ') {            
+            i32 vertex_indicies[3];
+            i32 texture_indices[3];
+            i32 normal_indices[3];
+            sscanf(line, "f %d/%d/%d %d/%d/%d %d/%d/%d", 
+                &vertex_indicies[0], &texture_indices[0], &normal_indices[0],
+                &vertex_indicies[1], &texture_indices[1], &normal_indices[1],
+                &vertex_indicies[2], &texture_indices[2], &normal_indices[2]
+            );            
+            face face = { .a = vertex_indicies[0] - 1, .b = vertex_indicies[1] - 1, .c = vertex_indicies[2] - 1};
+            result.faces.push_back(face);
         }
     }
 
-    vec3 result = { .x = values[0], .y = values[1], .z = values[2]};
     return result;
 }
