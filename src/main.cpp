@@ -24,7 +24,8 @@ void setup(void)
 {
     color_buffer = (u32 *)malloc(sizeof(u32) * window_width * window_height);
     color_buffer_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, window_width, window_height);
-    g_mesh = load_obj_file("./assets/cube.obj");
+    load_cube_mesh();
+    //g_mesh = load_obj_file("./assets/cube.obj");
 }
 
 void process_input(void)
@@ -142,17 +143,24 @@ void update(void)
         {
             continue;
         }
-
-        triangle projected_triangle;
+                
+        vec2 projected_points[3];
         for (int j = 0; j < 3; j++)
         {
-            vec2 projected_point = project(transformed_verticies[j]);
+            projected_points[j] = project(transformed_verticies[j]);
 
-            projected_point.x += (window_height / 2);
-            projected_point.y += (window_height / 2);
-
-            projected_triangle.points[j] = projected_point;
+            projected_points[j].x += (window_height / 2);
+            projected_points[j].y += (window_height / 2);
         }
+
+        triangle projected_triangle = {
+            .points = {
+                {projected_points[0]},
+                {projected_points[1]},
+                {projected_points[2]},
+            },
+            .color = face.color
+        };        
 
         triangles_to_render.push_back(projected_triangle);
     }
@@ -166,8 +174,9 @@ void render(void)
     for (int i = 0; i < num_triangles; i++)
     {
         vec2 *points = triangles_to_render[i].points;
+        u32 color = triangles_to_render[i].color;
         if (render_options.enable_fill) {
-            draw_filled_triangle(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y, 0xFF337def);
+            draw_filled_triangle(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y, color);
         }
         if (render_options.enable_wireframe) {            
             draw_triangle(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y, 0xFFfcc729);
