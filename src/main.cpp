@@ -126,8 +126,11 @@ void render(void)
     int num_triangles = triangles_to_render.size();
     for (int i = 0; i < num_triangles; i++) {
         vec2 *points = triangles_to_render[i].points;        
-        draw_triangle(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y, 0xFFFFFF00);
-    }    
+        draw_filled_triangle(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y, 0xFFFFFF00);
+    }      
+
+    //draw_filled_triangle(300, 300, 300, 450, 450, 300, 0xFF00FF00);
+    //draw_filled_triangle(450, 450, 300, 450, 450, 300, 0xFF00FF00);
 
     render_color_buffer();
     clear_color_buffer(0xFF000000);

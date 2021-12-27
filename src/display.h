@@ -15,12 +15,12 @@ bool initialize_window();
 void setup();
 void draw_grid();
 void draw_line(i32 x0, i32 y0, i32 x1, i32 y1, u32 color);
-void draw_triangle(i32 x0, i32 y0, i32 x1, i32 y1, i32 x2, i32 x3, u32 color);
+void draw_triangle(i32 x0, i32 y0, i32 x1, i32 y1, i32 x2, i32 y2, u32 color);
 void draw_rect(u32 x, u32 y, u32 width, u32 height, u32 color);
 void render_color_buffer();
 void clear_color_buffer(u32 color);
 void destroy_window();
-inline void set_pixel(u32 x, u32 y, u32 color);
+inline void draw_pixel(u32 x, u32 y, u32 color);
 
 
 #endif

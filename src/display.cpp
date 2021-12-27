@@ -1,7 +1,7 @@
 #include "display.h"
 
-u32 window_height = 600;
-u32 window_width = 800;
+u32 window_height = 800;
+u32 window_width = 1200;
 SDL_Window *window;
 SDL_Renderer *renderer;
 u32 *color_buffer;
@@ -18,8 +18,8 @@ bool initialize_window()
     SDL_DisplayMode display_mode;
     SDL_GetCurrentDisplayMode(0, &display_mode);
 
-    window_width = 801;  // display_mode.w;
-    window_height = 601; // display_mode.h;
+    //window_width = 801;  // display_mode.w;
+    //window_height = 601; // display_mode.h;
 
     window = SDL_CreateWindow(NULL, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, window_width, window_height, SDL_WINDOW_BORDERLESS);
 
@@ -86,7 +86,7 @@ void draw_line(i32 x0, i32 y0, i32 x1, i32 y1, u32 color) {
     f32 current_x = x0;
     f32 current_y = y0;
 
-    for (i32 i = 0; i < side_length; i++) {
+    for (i32 i = 0; i <= side_length; i++) {
         draw_pixel(round(current_x), round(current_y), color);
         current_x += inc_x;
         current_y += inc_y;
