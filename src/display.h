@@ -4,12 +4,20 @@
 #include <SDL2/SDL.h>
 #include "types.h"
 
+typedef struct {
+    bool enable_dot;
+    bool enable_wireframe;
+    bool enable_fill;
+    bool enable_back_face_culling;
+} RenderOptions;
+
 extern u32 window_height;
 extern u32 window_width;
 extern SDL_Window *window;
 extern SDL_Renderer *renderer;
 extern u32 *color_buffer;
 extern SDL_Texture *color_buffer_texture;
+extern RenderOptions render_options;
 
 bool initialize_window();
 void setup();

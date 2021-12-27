@@ -6,6 +6,7 @@ SDL_Window *window;
 SDL_Renderer *renderer;
 u32 *color_buffer;
 SDL_Texture *color_buffer_texture;
+RenderOptions render_options = {.enable_fill = true};
 
 bool initialize_window()
 {
