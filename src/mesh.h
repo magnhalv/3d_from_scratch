@@ -17,6 +17,8 @@ typedef struct {
     std::vector<vec3> vertices; 
     std::vector<face> faces; 
     vec3 rotation;
+    vec3 scale;
+    vec3 translation;
 } mesh;
 
 void load_cube_mesh(void);

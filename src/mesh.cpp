@@ -7,7 +7,11 @@
 vec3 parse_vec_line(const char *line, i32 length);
 face parse_face_line(const char *line, i32 length);
 
-mesh g_mesh = {};
+mesh g_mesh = {    
+    .rotation = { 0, 0, 0 },
+    .scale = { 1, 1, 1 },
+    .translation = { 0, 0, 0 },
+};
 
 vec3 mesh_vertices[N_CUBE_VERITICES] = {
     { .x = -1, .y = -1, .z = -1 }, // 0

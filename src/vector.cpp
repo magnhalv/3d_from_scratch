@@ -139,3 +139,20 @@ void normalize(vec3 *v) {
     v->z /= mag;
 }
 
+vec3 to_vec3(vec4 v) {
+    vec3 result = { v.x, v.y, v.z};
+    return result;
+}
+
+// 4D
+
+vec4 to_vec4(vec3 v) {
+    vec4 result = {
+        .x = v.x,
+        .y = v.y,
+        .z = v.z,
+        .w = 0
+    };
+    return result;
+}
+

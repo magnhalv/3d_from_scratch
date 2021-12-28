@@ -30,5 +30,4 @@ void clear_color_buffer(u32 color);
 void destroy_window();
 inline void draw_pixel(u32 x, u32 y, u32 color);
 
-
 #endif

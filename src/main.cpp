@@ -7,6 +7,7 @@
 #include "display.h"
 #include "vector.h"
 #include "mesh.h"
+#include "matrix.h"
 
 #define FPS 60
 #define FRAME_TARGET_TIME (1000 / FPS)
@@ -93,17 +94,17 @@ vec2 project(vec3 point)
     return projected_point;
 }
 
-bool should_clip(vec3 triangle[3])
-{
-    vec3 a = subtract(triangle[1], triangle[0]);
+bool should_clip(vec4 triangle[3])
+{    
+    vec3 a = subtract(to_vec3(triangle[1]), to_vec3(triangle[0]));
     normalize(&a);
-    vec3 b = subtract(triangle[2], triangle[0]);
+    vec3 b = subtract(to_vec3(triangle[2]), to_vec3(triangle[0]));
     normalize(&b);
 
     vec3 normalv = cross(a, b);
     normalize(&normalv);
 
-    vec3 camerav = subtract(camera_pos, triangle[0]);
+    vec3 camerav = subtract(camera_pos, to_vec3(triangle[0]));
     normalize(&camerav);
 
     f32 alignment = dot(camerav, normalv);
@@ -120,6 +121,10 @@ void update(void)
     g_mesh.rotation.y += 0.01;
     g_mesh.rotation.z = -0.2;
 
+    g_mesh.scale.x += 0.002;
+
+    Mat4 scale_matrix = mat4_scale(g_mesh.scale);
+
     triangles_to_render.clear();
 
     for (unsigned int i = 0; i < g_mesh.faces.size(); i++)
@@ -130,14 +135,15 @@ void update(void)
         face_verticies[1] = g_mesh.vertices[face.b];
         face_verticies[2] = g_mesh.vertices[face.c];
 
-        vec3 transformed_verticies[3];
+        vec4 transformed_verticies[3];
         for (int j = 0; j < 3; j++)
         {
-            vec3 transformed_vertex = face_verticies[j];
+            vec4 transformed_vertex = to_vec4(face_verticies[j]);
 
-            transformed_vertex = rotate_x(transformed_vertex, g_mesh.rotation.x);
+            transformed_vertex = mat4_mul_vec4(scale_matrix, transformed_vertex);
+            /* transformed_vertex = rotate_x(transformed_vertex, g_mesh.rotation.x);
             transformed_vertex = rotate_y(transformed_vertex, g_mesh.rotation.y);
-            transformed_vertex = rotate_z(transformed_vertex, g_mesh.rotation.z);
+            transformed_vertex = rotate_z(transformed_vertex, g_mesh.rotation.z); */
 
             transformed_vertex.z += 5.0;
 
@@ -152,7 +158,7 @@ void update(void)
         vec2 projected_points[3];
         for (int j = 0; j < 3; j++)
         {
-            projected_points[j] = project(transformed_verticies[j]);
+            projected_points[j] = project(to_vec3(transformed_verticies[j]));
 
             projected_points[j].x += (window_height / 2);
             projected_points[j].y += (window_height / 2);
