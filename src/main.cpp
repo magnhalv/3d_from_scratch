@@ -2,6 +2,7 @@
 #include <SDL2/SDL.h>
 #include <math.h>
 #include <vector>
+#include <algorithm>
 
 #include "display.h"
 #include "vector.h"
@@ -25,7 +26,7 @@ void setup(void)
     color_buffer = (u32 *)malloc(sizeof(u32) * window_width * window_height);
     color_buffer_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, window_width, window_height);
     load_cube_mesh();
-    //g_mesh = load_obj_file("./assets/cube.obj");
+    // g_mesh = load_obj_file("./assets/cube.obj");
 }
 
 void process_input(void)
@@ -109,6 +110,10 @@ bool should_clip(vec3 triangle[3])
     return alignment < 0.0;
 }
 
+bool compareTriangle(triangle a, triangle b) {
+    return a.average_depth > b.average_depth;
+}
+
 void update(void)
 {
     g_mesh.rotation.x += 0.01;
@@ -143,7 +148,7 @@ void update(void)
         {
             continue;
         }
-                
+
         vec2 projected_points[3];
         for (int j = 0; j < 3; j++)
         {
@@ -159,11 +164,12 @@ void update(void)
                 {projected_points[1]},
                 {projected_points[2]},
             },
-            .color = face.color
-        };        
+            .color = face.color,
+            .average_depth = (transformed_verticies[0].z + transformed_verticies[1].z + transformed_verticies[2].z) / 3};
 
         triangles_to_render.push_back(projected_triangle);
     }
+    sort(triangles_to_render.begin(), triangles_to_render.end(), compareTriangle);
 }
 
 void render(void)
@@ -175,18 +181,20 @@ void render(void)
     {
         vec2 *points = triangles_to_render[i].points;
         u32 color = triangles_to_render[i].color;
-        if (render_options.enable_fill) {
+        if (render_options.enable_fill)
+        {
             draw_filled_triangle(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y, color);
         }
-        if (render_options.enable_wireframe) {            
+        if (render_options.enable_wireframe)
+        {
             draw_triangle(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y, 0xFFfcc729);
         }
-        if (render_options.enable_dot) {
+        if (render_options.enable_dot)
+        {
             draw_rect(points[0].x - 2.5, points[0].y - 2.5, 5, 5, 0xFFFF0000);
             draw_rect(points[1].x - 2.5, points[1].y - 2.5, 5, 5, 0xFFFF0000);
-            draw_rect(points[2].x - 2.5, points[2].y - 2.5, 5, 5, 0xFFFF0000);            
-        }        
-        
+            draw_rect(points[2].x - 2.5, points[2].y - 2.5, 5, 5, 0xFFFF0000);
+        }
     }
 
     render_color_buffer();
