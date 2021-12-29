@@ -12,6 +12,12 @@ Mat4 mat4_identity()
     return result;
 }
 
+Mat4 mat4_translate(vec3 v)
+{
+    Mat4 result = mat4_translate(v.x, v.y, v.z);
+    return result;
+}
+
 Mat4 mat4_translate(f32 dx, f32 dy, f32 dz)
 {
     Mat4 result = {{
@@ -91,6 +97,28 @@ Mat4 mat4_mul_mat4(Mat4 a, Mat4 b) {
                 result.m[i][j] += a.m[i][k]*b.m[k][j];
             }
         }
+    }
+    return result;
+}
+
+Mat4 mat4_make_perspective(f32 fov, f32 aspect, f32 z_near, f32 z_far) {
+    Mat4 result = {{{0}}};
+    f32 fov_calc = 1 / (tan(fov/2.0));
+    result.m[0][0] = aspect*fov_calc;
+    result.m[1][1] = fov_calc;
+    result.m[2][2] = z_far / (z_far - z_near);
+    result.m[2][3] = (-z_far*z_near) / (z_far - z_near);
+    result.m[3][2] = 1.0;
+    return result;
+}
+
+vec4 mat4_mul_vec4_project(Mat4 proj, vec4 v) {
+    vec4 result = mat4_mul_vec4(proj, v);
+
+    if (result.w != 0) {
+        result.x /= result.w;
+        result.y /= result.w;
+        result.z /= result.w;
     }
     return result;
 }

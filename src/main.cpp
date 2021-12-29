@@ -16,17 +16,22 @@ std::vector<triangle> triangles_to_render;
 
 vec3 camera_pos = {.x = 0, .y = 0, .z = 0.0};
 
-f32 fov_factor = 640.0;
-
 i32 previous_frame_time = 0;
-
 bool is_running;
+
+Mat4 projection;
 
 void setup(void)
 {
     color_buffer = (u32 *)malloc(sizeof(u32) * window_width * window_height);
     color_buffer_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, window_width, window_height);
     load_cube_mesh();
+
+    f32 fov = M_PI/3;
+    f32 aspect = (f32)window_height/window_width;
+    f32 z_near = 0.1;
+    f32 z_far = 100.0;
+    projection = mat4_make_perspective(fov, aspect, z_near, z_far);
     // g_mesh = load_obj_file("./assets/cube.obj");
 }
 
@@ -86,13 +91,13 @@ void process_input(void)
     }
 }
 
-vec2 project(vec3 point)
+/* vec2 project(vec3 point)
 {
     vec2 projected_point = {
         .x = (fov_factor * point.x) / point.z,
         .y = (fov_factor * point.y) / point.z};
     return projected_point;
-}
+} */
 
 bool should_clip(vec4 triangle[3])
 {    
@@ -121,11 +126,15 @@ void update(void)
     g_mesh.rotation.y += 0.01;
     g_mesh.rotation.z = -0.2;
 
-    g_mesh.scale.x += 0.002;
+    //g_mesh.scale.x += 0.002;
+    g_mesh.translation.z = 5.0;
 
     Mat4 scale_matrix = mat4_scale(g_mesh.scale);
     Mat4 rotate_matrix = mat4_rotate_y(g_mesh.rotation.y);
+    Mat4 translate_matrix = mat4_translate(g_mesh.translation);
+    
     Mat4 transformation = mat4_mul_mat4(scale_matrix, rotate_matrix);
+    transformation = mat4_mul_mat4(transformation, translate_matrix);
     triangles_to_render.clear();
 
     for (unsigned int i = 0; i < g_mesh.faces.size(); i++)
@@ -156,13 +165,16 @@ void update(void)
             continue;
         }
 
-        vec2 projected_points[3];
+        vec4 projected_points[3];
         for (int j = 0; j < 3; j++)
         {
-            projected_points[j] = project(to_vec3(transformed_verticies[j]));
+            projected_points[j] = mat4_mul_vec4_project(projection, transformed_verticies[j]);
 
-            projected_points[j].x += (window_height / 2);
-            projected_points[j].y += (window_height / 2);
+            projected_points[j].x *= (window_width / 2.0);
+            projected_points[j].y *= (window_height / 2.0);
+
+            projected_points[j].x += (window_width / 2);
+            projected_points[j].y += (window_height / 2);            
         }
 
         triangle projected_triangle = {
@@ -186,7 +198,7 @@ void render(void)
     int num_triangles = triangles_to_render.size();
     for (int i = 0; i < num_triangles; i++)
     {
-        vec2 *points = triangles_to_render[i].points;
+        vec4 *points = triangles_to_render[i].points;
         u32 color = triangles_to_render[i].color;
         if (render_options.enable_fill)
         {

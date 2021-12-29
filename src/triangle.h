@@ -13,7 +13,7 @@ typedef struct {
 } face;
 
 typedef struct {
-    vec2 points[3];
+    vec4 points[3];
     u32 color;
     f32 average_depth;
 } triangle;
