@@ -124,7 +124,8 @@ void update(void)
     g_mesh.scale.x += 0.002;
 
     Mat4 scale_matrix = mat4_scale(g_mesh.scale);
-
+    Mat4 rotate_matrix = mat4_rotate_y(g_mesh.rotation.y);
+    Mat4 transformation = mat4_mul_mat4(scale_matrix, rotate_matrix);
     triangles_to_render.clear();
 
     for (unsigned int i = 0; i < g_mesh.faces.size(); i++)
@@ -140,7 +141,7 @@ void update(void)
         {
             vec4 transformed_vertex = to_vec4(face_verticies[j]);
 
-            transformed_vertex = mat4_mul_vec4(scale_matrix, transformed_vertex);
+            transformed_vertex = mat4_mul_vec4(transformation, transformed_vertex);
             /* transformed_vertex = rotate_x(transformed_vertex, g_mesh.rotation.x);
             transformed_vertex = rotate_y(transformed_vertex, g_mesh.rotation.y);
             transformed_vertex = rotate_z(transformed_vertex, g_mesh.rotation.z); */
