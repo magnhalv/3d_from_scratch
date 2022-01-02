@@ -8,6 +8,7 @@
 #include "vector.h"
 #include "mesh.h"
 #include "matrix.h"
+#include "light.h"
 
 #define FPS 60
 #define FRAME_TARGET_TIME (1000 / FPS)
@@ -24,15 +25,16 @@ Mat4 projection;
 void setup(void)
 {
     color_buffer = (u32 *)malloc(sizeof(u32) * window_width * window_height);
-    color_buffer_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, window_width, window_height);
-    load_cube_mesh();
+    color_buffer_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, window_width, window_height);    
 
     f32 fov = M_PI/3;
     f32 aspect = (f32)window_height/window_width;
     f32 z_near = 0.1;
     f32 z_far = 100.0;
     projection = mat4_make_perspective(fov, aspect, z_near, z_far);
-    // g_mesh = load_obj_file("./assets/cube.obj");
+    g_mesh = load_obj_file("./assets/f22.obj");
+    g_mesh.rotation.y = 3.14;
+    //load_cube_mesh();
 }
 
 void process_input(void)
@@ -91,33 +93,19 @@ void process_input(void)
     }
 }
 
-/* vec2 project(vec3 point)
-{
-    vec2 projected_point = {
-        .x = (fov_factor * point.x) / point.z,
-        .y = (fov_factor * point.y) / point.z};
-    return projected_point;
-} */
+bool compareTriangle(triangle a, triangle b) {
+    return a.average_depth > b.average_depth;
+}
 
-bool should_clip(vec4 triangle[3])
-{    
-    vec3 a = subtract(to_vec3(triangle[1]), to_vec3(triangle[0]));
+vec3 get_normalv(vec4 points[3]) {
+       vec3 a = subtract(to_vec3(points[1]), to_vec3(points[0]));
     normalize(&a);
-    vec3 b = subtract(to_vec3(triangle[2]), to_vec3(triangle[0]));
+    vec3 b = subtract(to_vec3(points[2]), to_vec3(points[0]));
     normalize(&b);
 
     vec3 normalv = cross(a, b);
     normalize(&normalv);
-
-    vec3 camerav = subtract(camera_pos, to_vec3(triangle[0]));
-    normalize(&camerav);
-
-    f32 alignment = dot(camerav, normalv);
-    return alignment < 0.0;
-}
-
-bool compareTriangle(triangle a, triangle b) {
-    return a.average_depth > b.average_depth;
+    return normalv;
 }
 
 void update(void)
@@ -126,7 +114,9 @@ void update(void)
     g_mesh.rotation.y += 0.01;
     g_mesh.rotation.z += 0.01;
 
-    //g_mesh.scale.x += 0.002;
+    g_mesh.scale.x = 1;
+    g_mesh.scale.y = 1;
+    g_mesh.scale.z = 1;
     //g_mesh.translation.x = 3;
     //g_mesh.translation.y = 2;
     g_mesh.translation.z = 5;
@@ -164,10 +154,21 @@ void update(void)
             transformed_verticies[j] = transformed_vertex;
         }
 
-        if (render_options.enable_back_face_culling && should_clip(transformed_verticies))
+
+        vec3 triangle_normalv = get_normalv(transformed_verticies);
+        if (render_options.enable_back_face_culling)
         {
-            continue;
+            vec3 camerav = subtract(camera_pos, to_vec3(transformed_verticies[0]));
+            f32 alignment = dot(triangle_normalv, camerav);
+            if (alignment < 0.0) {
+                continue;
+            }            
         }
+
+        u32 color = 0xFFFFFFFF;
+        vec3 color_direction = { .x = 0, .y = -1, .z = 0};
+        f32 color_alignment = (1.0 + dot(triangle_normalv, color_direction))/2;        
+        color = light_apply_intensity(color, color_alignment);
 
         vec4 projected_points[3];
         for (int j = 0; j < 3; j++)
@@ -187,7 +188,7 @@ void update(void)
                 {projected_points[1]},
                 {projected_points[2]},
             },
-            .color = face.color,
+            .color = color,
             .average_depth = (transformed_verticies[0].z + transformed_verticies[1].z + transformed_verticies[2].z) / 3};
 
         triangles_to_render.push_back(projected_triangle);
@@ -203,7 +204,7 @@ void render(void)
     for (int i = 0; i < num_triangles; i++)
     {
         vec4 *points = triangles_to_render[i].points;
-        u32 color = triangles_to_render[i].color;
+        u32 color = triangles_to_render[i].color;        
         if (render_options.enable_fill)
         {
             draw_filled_triangle(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y, color);

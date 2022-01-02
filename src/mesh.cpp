@@ -83,7 +83,7 @@ mesh load_obj_file(const char *file_name) {
                 &vertex_indicies[1], &texture_indices[1], &normal_indices[1],
                 &vertex_indicies[2], &texture_indices[2], &normal_indices[2]
             );            
-            face face = { .a = vertex_indicies[0] - 1, .b = vertex_indicies[1] - 1, .c = vertex_indicies[2] - 1};
+            face face = { .a = vertex_indicies[0] - 1, .b = vertex_indicies[1] - 1, .c = vertex_indicies[2] - 1, .color = 0xFFFFFFFF};
             result.faces.push_back(face);
         }
     }
