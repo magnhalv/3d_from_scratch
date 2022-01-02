@@ -124,17 +124,20 @@ void update(void)
 {
     g_mesh.rotation.x += 0.01;
     g_mesh.rotation.y += 0.01;
-    g_mesh.rotation.z = -0.2;
+    g_mesh.rotation.z += 0.01;
 
     //g_mesh.scale.x += 0.002;
-    g_mesh.translation.z = 5.0;
+    //g_mesh.translation.x = 3;
+    //g_mesh.translation.y = 2;
+    g_mesh.translation.z = 5;
 
-    Mat4 scale_matrix = mat4_scale(g_mesh.scale);
-    Mat4 rotate_matrix = mat4_rotate_y(g_mesh.rotation.y);
-    Mat4 translate_matrix = mat4_translate(g_mesh.translation);
     
-    Mat4 transformation = mat4_mul_mat4(scale_matrix, rotate_matrix);
-    transformation = mat4_mul_mat4(transformation, translate_matrix);
+    Mat4 world_matrix = mat4_scale(g_mesh.scale);
+    world_matrix = mat4_mul_mat4(mat4_rotate_x(g_mesh.rotation.x), world_matrix);
+    world_matrix = mat4_mul_mat4(mat4_rotate_y(g_mesh.rotation.y), world_matrix);
+    world_matrix = mat4_mul_mat4(mat4_rotate_z(g_mesh.rotation.z), world_matrix);
+    world_matrix = mat4_mul_mat4(mat4_translate(g_mesh.translation), world_matrix);
+
     triangles_to_render.clear();
 
     for (unsigned int i = 0; i < g_mesh.faces.size(); i++)
@@ -143,6 +146,7 @@ void update(void)
         vec3 face_verticies[3];
         face_verticies[0] = g_mesh.vertices[face.a];
         face_verticies[1] = g_mesh.vertices[face.b];
+
         face_verticies[2] = g_mesh.vertices[face.c];
 
         vec4 transformed_verticies[3];
@@ -150,12 +154,12 @@ void update(void)
         {
             vec4 transformed_vertex = to_vec4(face_verticies[j]);
 
-            transformed_vertex = mat4_mul_vec4(transformation, transformed_vertex);
+            transformed_vertex = mat4_mul_vec4(world_matrix, transformed_vertex);
             /* transformed_vertex = rotate_x(transformed_vertex, g_mesh.rotation.x);
             transformed_vertex = rotate_y(transformed_vertex, g_mesh.rotation.y);
             transformed_vertex = rotate_z(transformed_vertex, g_mesh.rotation.z); */
 
-            transformed_vertex.z += 5.0;
+            //transformed_vertex.z += 5.0;
 
             transformed_verticies[j] = transformed_vertex;
         }

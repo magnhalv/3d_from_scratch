@@ -151,7 +151,7 @@ vec4 to_vec4(vec3 v) {
         .x = v.x,
         .y = v.y,
         .z = v.z,
-        .w = 0
+        .w = 1
     };
     return result;
 }

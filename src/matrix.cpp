@@ -90,9 +90,10 @@ vec4 mat4_mul_vec4(Mat4 m, vec4 v)
 }
 
 Mat4 mat4_mul_mat4(Mat4 a, Mat4 b) {
-    Mat4 result = {};
+    Mat4 result = {{{0}}};
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
+            result.m[i][j] = 0.0;
             for (int k = 0; k < 4; k++) {
                 result.m[i][j] += a.m[i][k]*b.m[k][j];
             }
