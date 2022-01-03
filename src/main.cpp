@@ -32,8 +32,7 @@ void setup(void)
     f32 z_near = 0.1;
     f32 z_far = 100.0;
     projection = mat4_make_perspective(fov, aspect, z_near, z_far);
-    g_mesh = load_obj_file("./assets/f22.obj");
-    g_mesh.rotation.y = 3.14;
+    g_mesh = load_obj_file("./assets/f22.obj");    
     //load_cube_mesh();
 }
 
@@ -166,7 +165,7 @@ void update(void)
         }
 
         u32 color = 0xFFFFFFFF;
-        vec3 color_direction = { .x = 0, .y = -1, .z = 0};
+        vec3 color_direction = { .x = 0, .y = 1, .z = 0};
         f32 color_alignment = (1.0 + dot(triangle_normalv, color_direction))/2;        
         color = light_apply_intensity(color, color_alignment);
 
@@ -177,6 +176,9 @@ void update(void)
 
             projected_points[j].x *= (window_width / 2.0);
             projected_points[j].y *= (window_height / 2.0);
+
+            // Obj files have inverte y, thus we need to flip it.
+            projected_points[j].y *= -1;
 
             projected_points[j].x += (window_width / 2);
             projected_points[j].y += (window_height / 2);            
