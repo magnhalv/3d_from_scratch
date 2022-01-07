@@ -9,6 +9,7 @@
 #include "mesh.h"
 #include "matrix.h"
 #include "light.h"
+#include "texture.h"
 
 #define FPS 60
 #define FRAME_TARGET_TIME (1000 / FPS)
@@ -27,8 +28,8 @@ void setup(void)
     color_buffer = (u32 *)malloc(sizeof(u32) * window_width * window_height);
     color_buffer_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, window_width, window_height);    
 
-    f32 fov = M_PI/3;
-    f32 aspect = (f32)window_height/window_width;
+    f32 fov = M_PI / 3;
+    f32 aspect = (f32)window_height / window_width;
     f32 z_near = 0.1;
     f32 z_far = 100.0;
     projection = mat4_make_perspective(fov, aspect, z_near, z_far);
@@ -55,27 +56,36 @@ void process_input(void)
         }
         else if (key == SDLK_1)
         {
-            render_options.enable_dot = true;
-            render_options.enable_wireframe = true;
-            render_options.enable_fill = false;
+            render_options.draw_options = {0};
+            render_options.draw_options.dot = true;
+            render_options.draw_options.wireframe = true;
         }
         else if (key == SDLK_2)
         {
-            render_options.enable_dot = false;
-            render_options.enable_wireframe = true;
-            render_options.enable_fill = false;
+            render_options.draw_options = {0};
+            render_options.draw_options.wireframe = true;
         }
         else if (key == SDLK_3)
         {
-            render_options.enable_dot = false;
-            render_options.enable_wireframe = false;
-            render_options.enable_fill = true;
+            render_options.draw_options = {0};
+            render_options.draw_options.fill = true;
         }
         else if (key == SDLK_4)
         {
-            render_options.enable_dot = false;
-            render_options.enable_wireframe = true;
-            render_options.enable_fill = true;
+            render_options.draw_options = {0};
+            render_options.draw_options.wireframe = true;
+            render_options.draw_options.fill = true;
+        }
+        else if (key == SDLK_5)
+        {
+            render_options.draw_options = {0};
+            render_options.draw_options.texture = true;
+        }
+        else if (key == SDLK_6)
+        {
+            render_options.draw_options = {0};
+            render_options.draw_options.texture = true;
+            render_options.draw_options.wireframe = true;
         }
         else if (key == SDLK_b)
         {
@@ -120,7 +130,6 @@ void update(void)
     //g_mesh.translation.y = 2;
     g_mesh.translation.z = 5;
 
-    
     Mat4 world_matrix = mat4_scale(g_mesh.scale);
     world_matrix = mat4_mul_mat4(mat4_rotate_x(g_mesh.rotation.x), world_matrix);
     world_matrix = mat4_mul_mat4(mat4_rotate_y(g_mesh.rotation.y), world_matrix);
@@ -148,7 +157,7 @@ void update(void)
             transformed_vertex = rotate_y(transformed_vertex, g_mesh.rotation.y);
             transformed_vertex = rotate_z(transformed_vertex, g_mesh.rotation.z); */
 
-            //transformed_vertex.z += 5.0;
+            // transformed_vertex.z += 5.0;
 
             transformed_verticies[j] = transformed_vertex;
         }
@@ -181,7 +190,7 @@ void update(void)
             projected_points[j].y *= -1;
 
             projected_points[j].x += (window_width / 2);
-            projected_points[j].y += (window_height / 2);            
+            projected_points[j].y += (window_height / 2);
         }
 
         triangle projected_triangle = {
@@ -205,17 +214,28 @@ void render(void)
     int num_triangles = triangles_to_render.size();
     for (int i = 0; i < num_triangles; i++)
     {
+        Tex2 *tex = triangles_to_render[i].texcoords;
         vec4 *points = triangles_to_render[i].points;
-        u32 color = triangles_to_render[i].color;        
-        if (render_options.enable_fill)
+        u32 color = triangles_to_render[i].color;
+        if (render_options.draw_options.fill)
         {
             draw_filled_triangle(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y, color);
         }
-        if (render_options.enable_wireframe)
+
+        if (render_options.draw_options.texture)
+        {
+            /* draw_textured_triangle(
+                points[0].x, points[0].y, tex[0].u, tex[0].v,
+                points[1].x, points[1].y, tex[1].u, tex[1].v,
+                points[2].x, points[2].y, tex[2].u, tex[2].v,
+                color); */
+        }
+
+        if (render_options.draw_options.wireframe)
         {
             draw_triangle(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y, 0xFFfcc729);
         }
-        if (render_options.enable_dot)
+        if (render_options.draw_options.dot)
         {
             draw_rect(points[0].x - 2.5, points[0].y - 2.5, 5, 5, 0xFFFF0000);
             draw_rect(points[1].x - 2.5, points[1].y - 2.5, 5, 5, 0xFFFF0000);

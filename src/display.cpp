@@ -6,7 +6,7 @@ SDL_Window *window;
 SDL_Renderer *renderer;
 u32 *color_buffer;
 SDL_Texture *color_buffer_texture;
-RenderOptions render_options = {.enable_fill = true, .enable_back_face_culling = true};
+RenderOptions render_options = { .draw_options = {.fill = true}, .enable_back_face_culling = true};
 
 bool initialize_window()
 {

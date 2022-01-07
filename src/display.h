@@ -5,9 +5,14 @@
 #include "types.h"
 
 typedef struct {
-    bool enable_dot;
-    bool enable_wireframe;
-    bool enable_fill;
+    bool dot;
+    bool wireframe;
+    bool fill;  
+    bool texture;  
+} DrawOptions;
+
+typedef struct {
+    DrawOptions draw_options;
     bool enable_back_face_culling;
 } RenderOptions;
 
