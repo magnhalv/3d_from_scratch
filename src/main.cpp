@@ -33,8 +33,11 @@ void setup(void)
     f32 z_near = 0.1;
     f32 z_far = 100.0;
     projection = mat4_make_perspective(fov, aspect, z_near, z_far);
-    g_mesh = load_obj_file("./assets/f22.obj");    
-    //load_cube_mesh();
+    
+    mesh_texture = (u32*) REDBRICK_TEXTURE;
+
+    //g_mesh = load_obj_file("./assets/f22.obj");    
+    load_cube_mesh();
 }
 
 void process_input(void)
@@ -120,8 +123,8 @@ vec3 get_normalv(vec4 points[3]) {
 void update(void)
 {
     g_mesh.rotation.x += 0.01;
-    g_mesh.rotation.y += 0.01;
-    g_mesh.rotation.z += 0.01;
+    //g_mesh.rotation.y += 0.01;
+    //g_mesh.rotation.z += 0.01;
 
     g_mesh.scale.x = 1;
     g_mesh.scale.y = 1;
@@ -224,11 +227,11 @@ void render(void)
 
         if (render_options.draw_options.texture)
         {
-            /* draw_textured_triangle(
+            draw_textured_triangle(
                 points[0].x, points[0].y, tex[0].u, tex[0].v,
                 points[1].x, points[1].y, tex[1].u, tex[1].v,
                 points[2].x, points[2].y, tex[2].u, tex[2].v,
-                color); */
+                mesh_texture);
         }
 
         if (render_options.draw_options.wireframe)

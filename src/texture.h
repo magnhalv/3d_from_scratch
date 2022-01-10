@@ -11,6 +11,7 @@ typedef struct {
 extern i32 texture_width;
 extern i32 texture_height;
 
+extern u32 *mesh_texture;
 extern const u8 REDBRICK_TEXTURE[];
 
 #endif
