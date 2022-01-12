@@ -1,4 +1,5 @@
 #include <math.h>
+#include <iostream>
 
 #include "triangle.h"
 #include "swap.h"
@@ -90,6 +91,56 @@ void draw_filled_triangle(i32 x0, i32 y0, i32 x1, i32 y1, i32 x2, i32 y2, u32 co
     }
 }
 
+vec3 barycentric_weights(vec2 a, vec2 b, vec2 c, vec2 p)
+{
+    vec2 ab = subtract(b, a);
+    vec2 bc = subtract(c, b);
+    vec2 ac = subtract(c, a);
+    vec2 ap = subtract(p, a);
+    vec2 bp = subtract(p, b);
+
+    f32 area_triangle_abc = (ab.x * ac.y) - (ab.y * ac.x);
+
+    f32 alpha = ((bc.x * bp.y) - (bc.y * bp.x)) / area_triangle_abc;
+    f32 beta = ((ap.x * ac.y) - (ap.y * ac.x)) / area_triangle_abc;
+    f32 gamma = 1 - alpha - beta;
+
+    if (gamma < 0) {
+        gamma = 0;
+    }
+
+    vec3 result = {alpha, beta, gamma};
+    return result;
+}
+
+void draw_texel(
+    i32 x, i32 y, u32 *texture,
+    vec2 a, vec2 b, vec2 c,
+    f32 u0, f32 v0,
+    f32 u1, f32 v1,
+    f32 u2, f32 v2)
+{
+    vec2 p = {x, y};
+    vec3 weights = barycentric_weights(a, b, c, p);
+
+    f32 alpha = weights.x;
+    f32 beta = weights.y;
+    f32 gamma = weights.z;
+
+    f32 interpolated_u = (u0 * alpha) + (u1 * beta) + (u2 * gamma);
+    f32 interpolated_v = (v0 * alpha) + (v1 * beta) + (v2 * gamma);
+
+    i32 tex_x = abs((int)(interpolated_u * texture_width));
+    i32 tex_y = abs((int)(interpolated_v * texture_height));
+
+    if ((tex_x < 0 || tex_x > texture_width) || (tex_y < 0 || tex_y > texture_height)) {
+        // TODO : Fix barycentric going sum > 1.0
+        std::cout << "Out of range. tex_x: " << tex_x << ". tex_y: " << tex_y << std::endl;
+    }
+
+    draw_pixel(x, y, texture[(tex_y * texture_width) + tex_x]);
+}
+
 void draw_textured_triangle(
     i32 x0, i32 y0, f32 u0, f32 v0,
     i32 x1, i32 y1, f32 u1, f32 v1,
@@ -118,6 +169,10 @@ void draw_textured_triangle(
         swap(&v0, &v1);
     }
 
+    vec2 a = {.x = x0, .y = y0};
+    vec2 b = {.x = x1, .y = y1};
+    vec2 c = {.x = x2, .y = y2};
+
     f32 inv_slope1 = 0;
     f32 inv_slope2 = 0;
 
@@ -145,7 +200,10 @@ void draw_textured_triangle(
 
             for (i32 x = x_start; x < x_end; x++)
             {
-                draw_pixel(x, y, (x % 2 == 0 && y % 2 == 0) ? 0xFFFF00FF : 0xFF000000);
+                draw_texel(
+                    x, y, texture,
+                    a, b, c,
+                    u0, v0, u1, v1, u2, v2);
             }
         }
     }
@@ -177,7 +235,10 @@ void draw_textured_triangle(
 
             for (i32 x = x_start; x < x_end; x++)
             {
-                draw_pixel(x, y, (x % 2 == 0 && y % 2 == 0) ? 0xFFFF00FF : 0xFF000000);
+                draw_texel(
+                    x, y, texture,
+                    a, b, c,
+                    u0, v0, u1, v1, u2, v2);
             }
         }
     }

@@ -123,8 +123,8 @@ vec3 get_normalv(vec4 points[3]) {
 void update(void)
 {
     g_mesh.rotation.x += 0.01;
-    //g_mesh.rotation.y += 0.01;
-    //g_mesh.rotation.z += 0.01;
+    g_mesh.rotation.y += 0.01;
+    g_mesh.rotation.z += 0.01;
 
     g_mesh.scale.x = 1;
     g_mesh.scale.y = 1;
@@ -196,11 +196,16 @@ void update(void)
             projected_points[j].y += (window_height / 2);
         }
 
-        triangle projected_triangle = {
+        triangle projected_triangle = {            
             .points = {
                 {projected_points[0]},
                 {projected_points[1]},
                 {projected_points[2]},
+            },
+            .texcoords = {
+                {face.a_uv},
+                {face.b_uv},
+                {face.c_uv},
             },
             .color = color,
             .average_depth = (transformed_verticies[0].z + transformed_verticies[1].z + transformed_verticies[2].z) / 3};
