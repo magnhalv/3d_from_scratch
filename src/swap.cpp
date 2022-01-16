@@ -9,7 +9,8 @@ void swap(i32 *a, i32 *b)
 
 void swap(f32 *a, f32 *b)
 {
-    i32 temp = *a;
+    f32 temp = *a;
     *a = *b;
     *b = temp;
 }
+

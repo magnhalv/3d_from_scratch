@@ -103,75 +103,91 @@ vec3 barycentric_weights(vec2 a, vec2 b, vec2 c, vec2 p)
 
     f32 alpha = ((bc.x * bp.y) - (bc.y * bp.x)) / area_triangle_abc;
     f32 beta = ((ap.x * ac.y) - (ap.y * ac.x)) / area_triangle_abc;
-    f32 gamma = 1 - alpha - beta;
-
-    if (gamma < 0) {
-        gamma = 0;
-    }
+    f32 gamma = 1.0 - alpha - beta;
 
     vec3 result = {alpha, beta, gamma};
     return result;
 }
 
+
+
 void draw_texel(
     i32 x, i32 y, u32 *texture,
-    vec2 a, vec2 b, vec2 c,
-    f32 u0, f32 v0,
-    f32 u1, f32 v1,
-    f32 u2, f32 v2)
+    vec4 point_a, vec4 point_b, vec4 point_c,
+    Tex2 a_uv, Tex2 b_uv, Tex2 c_uv
+)
 {
     vec2 p = {x, y};
+    vec2 a = to_vec2(&point_a);
+    vec2 b = to_vec2(&point_b);
+    vec2 c = to_vec2(&point_c);
+
     vec3 weights = barycentric_weights(a, b, c, p);
 
     f32 alpha = weights.x;
     f32 beta = weights.y;
     f32 gamma = weights.z;
 
-    f32 interpolated_u = (u0 * alpha) + (u1 * beta) + (u2 * gamma);
-    f32 interpolated_v = (v0 * alpha) + (v1 * beta) + (v2 * gamma);
+    f32 interpolated_u = ((a_uv.u / point_a.w) * alpha) + ((b_uv.u / point_b.w) * beta) + ((c_uv.u / point_c.w) * gamma);
+    f32 interpolated_v = ((a_uv.v / point_a.w) * alpha) + ((b_uv.v / point_b.w) * beta) + ((c_uv.v / point_c.w) * gamma);
+
+    f32 interpolated_reciprocal_w = ((1.0 / point_a.w) * alpha) + (( 1.0 / point_b.w) * beta) + ((1.0 / point_c.w) * gamma);
+
+    interpolated_u /= interpolated_reciprocal_w;
+    interpolated_v /= interpolated_reciprocal_w;
 
     i32 tex_x = abs((int)(interpolated_u * texture_width));
     i32 tex_y = abs((int)(interpolated_v * texture_height));
 
     if ((tex_x < 0 || tex_x > texture_width) || (tex_y < 0 || tex_y > texture_height)) {
         // TODO : Fix barycentric going sum > 1.0
-        std::cout << "Out of range. tex_x: " << tex_x << ". tex_y: " << tex_y << std::endl;
+        std::cout << "Out of range. tex_x: " << tex_x << ". tex_y: " << tex_y << std::endl;        
+        return;
     }
 
     draw_pixel(x, y, texture[(tex_y * texture_width) + tex_x]);
 }
 
 void draw_textured_triangle(
-    i32 x0, i32 y0, f32 u0, f32 v0,
-    i32 x1, i32 y1, f32 u1, f32 v1,
-    i32 x2, i32 y2, f32 u2, f32 v2,
+    i32 x0, i32 y0, f32 z0, f32 w0, f32 u0, f32 v0,
+    i32 x1, i32 y1, f32 z1, f32 w1, f32 u1, f32 v1,
+    i32 x2, i32 y2, f32 z2, f32 w2, f32 u2, f32 v2,
     u32 *texture)
 {
     if (y0 > y1)
-    {
-        swap(&y0, &y1);
+    {        
         swap(&x0, &x1);
+        swap(&y0, &y1);
+        swap(&z0, &z1);
+        swap(&w0, &w1);
         swap(&u0, &u1);
-        swap(&v0, &v1);
+        swap(&v0, &v1);        
     }
     if (y1 > y2)
     {
         swap(&y1, &y2);
         swap(&x1, &x2);
+        swap(&z1, &z2);
+        swap(&w1, &w2);
         swap(&u1, &u2);
-        swap(&v1, &v2);
+        swap(&v1, &v2);        
     }
     if (y0 > y1)
     {
-        swap(&y0, &y1);
         swap(&x0, &x1);
+        swap(&y0, &y1);
+        swap(&z0, &z1);
+        swap(&w0, &w1);
         swap(&u0, &u1);
         swap(&v0, &v1);
     }
 
-    vec2 a = {.x = x0, .y = y0};
-    vec2 b = {.x = x1, .y = y1};
-    vec2 c = {.x = x2, .y = y2};
+    vec4 a = { x0, y0, z0, w0 };
+    vec4 b = { x1, y1, z1, w1 };
+    vec4 c = { x2, y2, z2, w2 };
+    Tex2 a_uv = { u0, v0 };
+    Tex2 b_uv = { u1, v1 };
+    Tex2 c_uv = { u2, v2 };
 
     f32 inv_slope1 = 0;
     f32 inv_slope2 = 0;
@@ -203,7 +219,7 @@ void draw_textured_triangle(
                 draw_texel(
                     x, y, texture,
                     a, b, c,
-                    u0, v0, u1, v1, u2, v2);
+                    a_uv, b_uv, c_uv);
             }
         }
     }
@@ -238,7 +254,7 @@ void draw_textured_triangle(
                 draw_texel(
                     x, y, texture,
                     a, b, c,
-                    u0, v0, u1, v1, u2, v2);
+                    a_uv, b_uv, c_uv);
             }
         }
     }

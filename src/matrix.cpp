@@ -1,6 +1,8 @@
 #include <math.h>
 #include "matrix.h"
 
+#include <stdio.h>
+
 Mat4 mat4_identity()
 {
     Mat4 result = {{

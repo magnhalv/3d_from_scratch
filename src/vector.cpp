@@ -49,6 +49,11 @@ void normalize(vec2 *v) {
     v->y /= mag;
 }
 
+vec2 to_vec2(vec4 *v) {
+    vec2 result = { v->x, v->y };
+    return result;
+}
+
 /////////////
 // 3D
 /////////////

@@ -122,9 +122,9 @@ vec3 get_normalv(vec4 points[3]) {
 
 void update(void)
 {
-    g_mesh.rotation.x += 0.01;
+    //g_mesh.rotation.x += 0.02;
     g_mesh.rotation.y += 0.01;
-    g_mesh.rotation.z += 0.01;
+    //g_mesh.rotation.z += 0.01;
 
     g_mesh.scale.x = 1;
     g_mesh.scale.y = 1;
@@ -147,7 +147,6 @@ void update(void)
         vec3 face_verticies[3];
         face_verticies[0] = g_mesh.vertices[face.a];
         face_verticies[1] = g_mesh.vertices[face.b];
-
         face_verticies[2] = g_mesh.vertices[face.c];
 
         vec4 transformed_verticies[3];
@@ -198,9 +197,9 @@ void update(void)
 
         triangle projected_triangle = {            
             .points = {
-                {projected_points[0]},
-                {projected_points[1]},
-                {projected_points[2]},
+                {projected_points[0].x, projected_points[0].y, projected_points[0].z, projected_points[0].w, },
+                {projected_points[1].x, projected_points[1].y, projected_points[1].z, projected_points[1].w, },
+                {projected_points[2].x, projected_points[2].y, projected_points[2].z, projected_points[2].w, },
             },
             .texcoords = {
                 {face.a_uv},
@@ -231,11 +230,11 @@ void render(void)
         }
 
         if (render_options.draw_options.texture)
-        {
+        {            
             draw_textured_triangle(
-                points[0].x, points[0].y, tex[0].u, tex[0].v,
-                points[1].x, points[1].y, tex[1].u, tex[1].v,
-                points[2].x, points[2].y, tex[2].u, tex[2].v,
+                points[0].x, points[0].y, points[0].z, points[0].w, tex[0].u, tex[0].v,
+                points[1].x, points[1].y, points[1].z, points[1].w, tex[1].u, tex[1].v,
+                points[2].x, points[2].y, points[2].z, points[2].w, tex[2].u, tex[2].v,
                 mesh_texture);
         }
 

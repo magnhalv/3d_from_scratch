@@ -30,6 +30,7 @@ vec2 multiply(vec2 v, f32 factor);
 vec2 divide(vec2 v, f32 factor);
 f32 dot(vec2 v, f32 factor);
 void normalize(vec2 *v);
+vec2 to_vec2(vec4 *v);
 
 // 3D
 
