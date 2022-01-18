@@ -26,7 +26,7 @@ Mat4 projection;
 
 void setup(void)
 {
-    color_buffer = (u32 *)malloc(sizeof(u32) * window_width * window_height);    
+    color_buffer = (u32 *)malloc(sizeof(u32) * window_width * window_height);
     color_buffer_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, window_width, window_height);
     z_buffer = (f32 *)malloc(sizeof(f32) * window_width * window_height);
 
@@ -39,11 +39,12 @@ void setup(void)
     // mesh_texture = (u32*) REDBRICK_TEXTURE;
 
     g_mesh = load_obj_file("./assets/drone.obj");
-    //load_cube_mesh();
+    // load_cube_mesh();
     load_png_texture_data("./assets/drone.png");
 }
 
-void tear_down() {
+void tear_down()
+{
     free_texture();
 }
 
@@ -110,11 +111,6 @@ void process_input(void)
     default:
         break;
     }
-}
-
-bool compareTriangle(triangle a, triangle b)
-{
-    return a.average_depth > b.average_depth;
 }
 
 vec3 get_normalv(vec4 points[3])
@@ -231,11 +227,10 @@ void update(void)
                 {face.c_uv},
             },
             .color = color,
-            .average_depth = (transformed_verticies[0].z + transformed_verticies[1].z + transformed_verticies[2].z) / 3};
+        };
 
         triangles_to_render.push_back(projected_triangle);
     }
-    sort(triangles_to_render.begin(), triangles_to_render.end(), compareTriangle);
 }
 
 void render(void)
@@ -250,7 +245,11 @@ void render(void)
         u32 color = triangles_to_render[i].color;
         if (render_options.draw_options.fill)
         {
-            draw_filled_triangle(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y, color);
+            draw_filled_triangle(
+                points[0].x, points[0].y, points[0].z, points[0].w,
+                points[1].x, points[1].y, points[1].z, points[1].w,
+                points[2].x, points[2].y, points[2].z, points[2].w, 
+                color);
         }
 
         if (render_options.draw_options.texture)
