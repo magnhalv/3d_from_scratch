@@ -26,8 +26,9 @@ Mat4 projection;
 
 void setup(void)
 {
-    color_buffer = (u32 *)malloc(sizeof(u32) * window_width * window_height);
+    color_buffer = (u32 *)malloc(sizeof(u32) * window_width * window_height);    
     color_buffer_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, window_width, window_height);
+    z_buffer = (f32 *)malloc(sizeof(f32) * window_width * window_height);
 
     f32 fov = M_PI / 3;
     f32 aspect = (f32)window_height / window_width;
@@ -37,9 +38,13 @@ void setup(void)
 
     // mesh_texture = (u32*) REDBRICK_TEXTURE;
 
-    // g_mesh = load_obj_file("./assets/f22.obj");
-    load_cube_mesh();
-    load_png_texture_data("./assets/cube.png");
+    g_mesh = load_obj_file("./assets/drone.obj");
+    //load_cube_mesh();
+    load_png_texture_data("./assets/drone.png");
+}
+
+void tear_down() {
+    free_texture();
 }
 
 void process_input(void)
@@ -126,9 +131,9 @@ vec3 get_normalv(vec4 points[3])
 
 void update(void)
 {
-    // g_mesh.rotation.x += 0.02;
+    g_mesh.rotation.x += 0.01;
     g_mesh.rotation.y += 0.01;
-    // g_mesh.rotation.z += 0.01;
+    g_mesh.rotation.z += 0.01;
 
     g_mesh.scale.x = 1;
     g_mesh.scale.y = 1;
@@ -271,6 +276,7 @@ void render(void)
 
     render_color_buffer();
     clear_color_buffer(0xFF000000);
+    clear_z_buffer();
     SDL_RenderPresent(renderer);
 }
 
@@ -299,6 +305,7 @@ int main(void)
     }
 
     destroy_window();
+    tear_down();
 
     return 0;
 }

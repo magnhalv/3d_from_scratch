@@ -4,7 +4,8 @@ u32 window_height = 800;
 u32 window_width = 1200;
 SDL_Window *window;
 SDL_Renderer *renderer;
-u32 *color_buffer;
+u32 *color_buffer = nullptr;
+f32 *z_buffer = nullptr;
 SDL_Texture *color_buffer_texture;
 RenderOptions render_options = { .draw_options = {.fill = true}, .enable_back_face_culling = true};
 
@@ -68,6 +69,17 @@ void clear_color_buffer(u32 color)
     }
 }
 
+void clear_z_buffer()
+{
+    for (u32 y = 0; y < window_height; y++)
+    {
+        for (u32 x = 0; x < window_width; x++)
+        {
+            z_buffer[(y*window_width) + x] = 1.0;
+        }
+    }
+}
+
 void draw_triangle(i32 x0, i32 y0, i32 x1, i32 y1, i32 x2, i32 y2, u32 color) {
         draw_line(x0, y0, x1, y1, color);
         draw_line(x1, y1, x2, y2, color);
@@ -124,7 +136,8 @@ void draw_grid(void)
 
 void destroy_window(void)
 {
-    free(color_buffer);
+    free(color_buffer);    
+    free(z_buffer);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();

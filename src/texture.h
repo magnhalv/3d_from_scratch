@@ -18,5 +18,6 @@ extern const u8 REDBRICK_TEXTURE[];
 
 
 void load_png_texture_data(const char *filename);
+void free_texture();
 
 #endif

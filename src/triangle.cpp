@@ -136,16 +136,18 @@ void draw_texel(
     interpolated_u /= interpolated_reciprocal_w;
     interpolated_v /= interpolated_reciprocal_w;
 
-    i32 tex_x = abs((int)(interpolated_u * texture_width));
-    i32 tex_y = abs((int)(interpolated_v * texture_height));
+    // Truncate due to fill strategy is not implemented.
+    i32 tex_x = abs((int)(interpolated_u * texture_width)) % texture_width; 
+    i32 tex_y = abs((int)(interpolated_v * texture_height)) % texture_height;
 
-    if ((tex_x < 0 || tex_x > texture_width) || (tex_y < 0 || tex_y > texture_height)) {
-        // TODO : Fix barycentric going sum > 1.0
-        std::cout << "Out of range. tex_x: " << tex_x << ". tex_y: " << tex_y << std::endl;        
-        return;
+    // Adjust 1/w, so that the pixels that are closer to the camera has smaller values
+    interpolated_reciprocal_w = 1.0 - interpolated_reciprocal_w;
+
+    if (interpolated_reciprocal_w < z_buffer[(y*window_width) + x]) {
+        draw_pixel(x, y, texture[(tex_y * texture_width) + tex_x]);
+        z_buffer[(y*window_width) + x] = interpolated_reciprocal_w;
     }
-
-    draw_pixel(x, y, texture[(tex_y * texture_width) + tex_x]);
+    
 }
 
 void draw_textured_triangle(

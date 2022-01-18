@@ -23,7 +23,10 @@ void load_png_texture_data(const char *filename) {
     else {
         printf("Error2\n");
     }
+}
 
+void free_texture() {
+    upng_free(png_texture);
 }
 
 const u8 REDBRICK_TEXTURE[] = {
