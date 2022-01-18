@@ -117,7 +117,7 @@ void draw_texel(
     Tex2 a_uv, Tex2 b_uv, Tex2 c_uv
 )
 {
-    vec2 p = {x, y};
+    vec2 p = {(f32)x, (f32)y};
     vec2 a = to_vec2(&point_a);
     vec2 b = to_vec2(&point_b);
     vec2 c = to_vec2(&point_c);
@@ -182,9 +182,9 @@ void draw_textured_triangle(
         swap(&v0, &v1);
     }
 
-    vec4 a = { x0, y0, z0, w0 };
-    vec4 b = { x1, y1, z1, w1 };
-    vec4 c = { x2, y2, z2, w2 };
+    vec4 a = { (f32)x0, (f32)y0, z0, w0 };
+    vec4 b = { (f32)x1, (f32)y1, z1, w1 };
+    vec4 c = { (f32)x2, (f32)y2, z2, w2 };
     Tex2 a_uv = { u0, v0 };
     Tex2 b_uv = { u1, v1 };
     Tex2 c_uv = { u2, v2 };

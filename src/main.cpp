@@ -10,6 +10,7 @@
 #include "matrix.h"
 #include "light.h"
 #include "texture.h"
+#include "lib/upng.h"
 
 #define FPS 60
 #define FRAME_TARGET_TIME (1000 / FPS)
@@ -26,18 +27,19 @@ Mat4 projection;
 void setup(void)
 {
     color_buffer = (u32 *)malloc(sizeof(u32) * window_width * window_height);
-    color_buffer_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, window_width, window_height);    
+    color_buffer_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, window_width, window_height);
 
     f32 fov = M_PI / 3;
     f32 aspect = (f32)window_height / window_width;
     f32 z_near = 0.1;
     f32 z_far = 100.0;
     projection = mat4_make_perspective(fov, aspect, z_near, z_far);
-    
-    mesh_texture = (u32*) REDBRICK_TEXTURE;
 
-    //g_mesh = load_obj_file("./assets/f22.obj");    
+    // mesh_texture = (u32*) REDBRICK_TEXTURE;
+
+    // g_mesh = load_obj_file("./assets/f22.obj");
     load_cube_mesh();
+    load_png_texture_data("./assets/cube.png");
 }
 
 void process_input(void)
@@ -105,12 +107,14 @@ void process_input(void)
     }
 }
 
-bool compareTriangle(triangle a, triangle b) {
+bool compareTriangle(triangle a, triangle b)
+{
     return a.average_depth > b.average_depth;
 }
 
-vec3 get_normalv(vec4 points[3]) {
-       vec3 a = subtract(to_vec3(points[1]), to_vec3(points[0]));
+vec3 get_normalv(vec4 points[3])
+{
+    vec3 a = subtract(to_vec3(points[1]), to_vec3(points[0]));
     normalize(&a);
     vec3 b = subtract(to_vec3(points[2]), to_vec3(points[0]));
     normalize(&b);
@@ -122,15 +126,15 @@ vec3 get_normalv(vec4 points[3]) {
 
 void update(void)
 {
-    //g_mesh.rotation.x += 0.02;
+    // g_mesh.rotation.x += 0.02;
     g_mesh.rotation.y += 0.01;
-    //g_mesh.rotation.z += 0.01;
+    // g_mesh.rotation.z += 0.01;
 
     g_mesh.scale.x = 1;
     g_mesh.scale.y = 1;
     g_mesh.scale.z = 1;
-    //g_mesh.translation.x = 3;
-    //g_mesh.translation.y = 2;
+    // g_mesh.translation.x = 3;
+    // g_mesh.translation.y = 2;
     g_mesh.translation.z = 5;
 
     Mat4 world_matrix = mat4_scale(g_mesh.scale);
@@ -164,20 +168,20 @@ void update(void)
             transformed_verticies[j] = transformed_vertex;
         }
 
-
         vec3 triangle_normalv = get_normalv(transformed_verticies);
         if (render_options.enable_back_face_culling)
         {
             vec3 camerav = subtract(camera_pos, to_vec3(transformed_verticies[0]));
             f32 alignment = dot(triangle_normalv, camerav);
-            if (alignment < 0.0) {
+            if (alignment < 0.0)
+            {
                 continue;
-            }            
+            }
         }
 
         u32 color = 0xFFFFFFFF;
-        vec3 color_direction = { .x = 0, .y = 1, .z = 0};
-        f32 color_alignment = (1.0 + dot(triangle_normalv, color_direction))/2;        
+        vec3 color_direction = {.x = 0, .y = 1, .z = 0};
+        f32 color_alignment = (1.0 + dot(triangle_normalv, color_direction)) / 2;
         color = light_apply_intensity(color, color_alignment);
 
         vec4 projected_points[3];
@@ -195,11 +199,26 @@ void update(void)
             projected_points[j].y += (window_height / 2);
         }
 
-        triangle projected_triangle = {            
+        triangle projected_triangle = {
             .points = {
-                {projected_points[0].x, projected_points[0].y, projected_points[0].z, projected_points[0].w, },
-                {projected_points[1].x, projected_points[1].y, projected_points[1].z, projected_points[1].w, },
-                {projected_points[2].x, projected_points[2].y, projected_points[2].z, projected_points[2].w, },
+                {
+                    projected_points[0].x,
+                    projected_points[0].y,
+                    projected_points[0].z,
+                    projected_points[0].w,
+                },
+                {
+                    projected_points[1].x,
+                    projected_points[1].y,
+                    projected_points[1].z,
+                    projected_points[1].w,
+                },
+                {
+                    projected_points[2].x,
+                    projected_points[2].y,
+                    projected_points[2].z,
+                    projected_points[2].w,
+                },
             },
             .texcoords = {
                 {face.a_uv},
@@ -230,7 +249,7 @@ void render(void)
         }
 
         if (render_options.draw_options.texture)
-        {            
+        {
             draw_textured_triangle(
                 points[0].x, points[0].y, points[0].z, points[0].w, tex[0].u, tex[0].v,
                 points[1].x, points[1].y, points[1].z, points[1].w, tex[1].u, tex[1].v,
