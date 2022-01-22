@@ -80,7 +80,7 @@ Mat4 mat4_scale(f32 sx, f32 sy, f32 sz)
     return result;
 }
 
-vec4 mat4_mul_vec4(Mat4 m, vec4 v)
+vec4 multiply(Mat4 m, vec4 v)
 {
     vec4 result = {
         .x = m.m[0][0] * v.x + m.m[0][1] * v.y + m.m[0][2] * v.z + m.m[0][3] * v.w,
@@ -91,7 +91,7 @@ vec4 mat4_mul_vec4(Mat4 m, vec4 v)
     return result;
 }
 
-Mat4 mat4_mul_mat4(Mat4 a, Mat4 b) {
+Mat4 multiply(Mat4 a, Mat4 b) {
     Mat4 result = {{{0}}};
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
@@ -116,7 +116,7 @@ Mat4 mat4_make_perspective(f32 fov, f32 aspect, f32 z_near, f32 z_far) {
 }
 
 vec4 mat4_mul_vec4_project(Mat4 proj, vec4 v) {
-    vec4 result = mat4_mul_vec4(proj, v);
+    vec4 result = multiply(proj, v);
 
     if (result.w != 0) {
         result.x /= result.w;
@@ -124,4 +124,19 @@ vec4 mat4_mul_vec4_project(Mat4 proj, vec4 v) {
         result.z /= result.w;
     }
     return result;
+}
+
+Mat4 look_at(vec3 eye, vec3 target, vec3 up) {
+    vec3 z = normalize(subtract(target, eye));
+    vec3 x = normalize(cross(up, z));
+    vec3 y = cross(z, x);
+
+    Mat4 view = {{
+        x.x, x.y, x.z, -dot(x, eye),
+        y.x, y.y, y.z, -dot(y, eye),
+        z.x, z.y, z.z, -dot(z, eye),
+        0,   0,   0,   -1 
+    }};
+
+    return view;
 }

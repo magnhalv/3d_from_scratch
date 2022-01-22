@@ -11,18 +11,19 @@
 #include "light.h"
 #include "texture.h"
 #include "lib/upng.h"
+#include "camera.h"
 
-#define FPS 60
+#define FPS 200
 #define FRAME_TARGET_TIME (1000 / FPS)
 
 std::vector<triangle> triangles_to_render;
-
-vec3 camera_pos = {.x = 0, .y = 0, .z = 0.0};
 
 i32 previous_frame_time = 0;
 bool is_running;
 
 Mat4 projection;
+Mat4 world_matrix;
+Mat4 view_matrix;
 
 void setup(void)
 {
@@ -48,7 +49,7 @@ void tear_down()
     free_texture();
 }
 
-void process_input(void)
+void process_input(f32 dt)
 {
     SDL_Event event;
     SDL_PollEvent(&event);
@@ -102,10 +103,42 @@ void process_input(void)
         {
             render_options.enable_back_face_culling = true;
         }
-        else if (key == SDLK_d)
+        else if (key == SDLK_x)
         {
             render_options.enable_back_face_culling = false;
         }
+
+        // Movement
+        else if (key == SDLK_w)
+        {
+            camera.forward_velocity = multiply(camera.direction, 5.0*dt);
+            camera.position = add(camera.position, camera.forward_velocity);
+        }        
+        else if (key == SDLK_s)
+        {
+            camera.forward_velocity = multiply(camera.direction, -5.0*dt);
+            camera.position = add(camera.position, camera.forward_velocity);
+        }
+
+        else if (key == SDLK_a)
+        {
+            camera.yaw += 1.0*dt;
+        }
+        else if (key == SDLK_d)
+        {
+            camera.yaw -= 1.0*dt;
+        }        
+
+        else if (key == SDLK_UP)
+        {
+            camera.position.y += 3*dt;
+        }
+        else if (key == SDLK_DOWN)
+        {
+            camera.position.y -= 3*dt;
+        }        
+
+
         break;
     }
     default:
@@ -125,11 +158,11 @@ vec3 get_normalv(vec4 points[3])
     return normalv;
 }
 
-void update(void)
-{
-    g_mesh.rotation.x += 0.01;
-    g_mesh.rotation.y += 0.01;
-    g_mesh.rotation.z += 0.01;
+void update(f32 dt)
+{    
+    //g_mesh.rotation.x += 0.6 * dt;
+    //g_mesh.rotation.y += 0.6 * dt;
+    //g_mesh.rotation.z += 0.6 * dt;
 
     g_mesh.scale.x = 1;
     g_mesh.scale.y = 1;
@@ -138,11 +171,19 @@ void update(void)
     // g_mesh.translation.y = 2;
     g_mesh.translation.z = 5;
 
-    Mat4 world_matrix = mat4_scale(g_mesh.scale);
-    world_matrix = mat4_mul_mat4(mat4_rotate_x(g_mesh.rotation.x), world_matrix);
-    world_matrix = mat4_mul_mat4(mat4_rotate_y(g_mesh.rotation.y), world_matrix);
-    world_matrix = mat4_mul_mat4(mat4_rotate_z(g_mesh.rotation.z), world_matrix);
-    world_matrix = mat4_mul_mat4(mat4_translate(g_mesh.translation), world_matrix);
+    
+    vec3 up = {0, 1, 0};
+    vec3 target = { 0, 0, 1};
+    Mat4 yaw = mat4_rotate_y(camera.yaw);
+    camera.direction = to_vec3(multiply(yaw, to_vec4(target)));
+    target = add(camera.position, camera.direction);
+    view_matrix = look_at(camera.position, target, up);
+
+    world_matrix = mat4_scale(g_mesh.scale);
+    world_matrix = multiply(mat4_rotate_x(g_mesh.rotation.x), world_matrix);
+    world_matrix = multiply(mat4_rotate_y(g_mesh.rotation.y), world_matrix);
+    world_matrix = multiply(mat4_rotate_z(g_mesh.rotation.z), world_matrix);
+    world_matrix = multiply(mat4_translate(g_mesh.translation), world_matrix);
 
     triangles_to_render.clear();
 
@@ -159,20 +200,16 @@ void update(void)
         {
             vec4 transformed_vertex = to_vec4(face_verticies[j]);
 
-            transformed_vertex = mat4_mul_vec4(world_matrix, transformed_vertex);
-            /* transformed_vertex = rotate_x(transformed_vertex, g_mesh.rotation.x);
-            transformed_vertex = rotate_y(transformed_vertex, g_mesh.rotation.y);
-            transformed_vertex = rotate_z(transformed_vertex, g_mesh.rotation.z); */
-
-            // transformed_vertex.z += 5.0;
-
+            transformed_vertex = multiply(world_matrix, transformed_vertex);
+            transformed_vertex = multiply(view_matrix, transformed_vertex);
             transformed_verticies[j] = transformed_vertex;
         }
 
         vec3 triangle_normalv = get_normalv(transformed_verticies);
         if (render_options.enable_back_face_culling)
         {
-            vec3 camerav = subtract(camera_pos, to_vec3(transformed_verticies[0]));
+            vec3 origin = {0, 0, 0};
+            vec3 camerav = subtract(origin, to_vec3(transformed_verticies[0]));
             f32 alignment = dot(triangle_normalv, camerav);
             if (alignment < 0.0)
             {
@@ -286,12 +323,8 @@ int main(void)
     setup();
 
     while (is_running)
-    {
-        process_input();
-        update();
-        render();
-
-        i32 time_to_wait = FRAME_TARGET_TIME - (SDL_GetTicks() - previous_frame_time);
+    {        
+        i32 time_to_wait = FRAME_TARGET_TIME - (SDL_GetTicks() - previous_frame_time);        
         if (time_to_wait < 0)
         {
             fprintf(stdout, "Misssed frame target by %d ms.\n", time_to_wait);
@@ -299,8 +332,13 @@ int main(void)
         else if (time_to_wait <= FRAME_TARGET_TIME)
         {
             SDL_Delay(time_to_wait);
-        }
+        }        
+        f32 dt = (SDL_GetTicks() - previous_frame_time) / 1000.0;        
         previous_frame_time = SDL_GetTicks();
+        process_input(dt);
+        update(dt);
+        render();
+        
     }
 
     destroy_window();

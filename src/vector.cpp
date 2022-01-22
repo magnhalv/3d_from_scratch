@@ -144,6 +144,12 @@ void normalize(vec3 *v) {
     v->z /= mag;
 }
 
+vec3 normalize(vec3 v) {
+    f32 mag = magnitude(v);
+    vec3 result = { v.x/mag, v.y/mag, v.z/mag};
+    return result;
+}
+
 vec3 to_vec3(vec4 v) {
     vec3 result = { v.x, v.y, v.z};
     return result;

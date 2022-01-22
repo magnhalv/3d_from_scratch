@@ -1,3 +1,4 @@
+
 #ifndef MATRIX_H
 #define MATRIX_H
 
@@ -19,9 +20,10 @@ Mat4 mat4_rotate_z(f32 angle);
 
 Mat4 mat4_make_perspective(f32 fov, f32 aspect, f32 z_near, f32 z_far);
 vec4 mat4_mul_vec4_project(Mat4 proj, vec4 v);
+Mat4 look_at(vec3 eye, vec3 target, vec3 up);
 
-vec4 mat4_mul_vec4(Mat4 m, vec4 v);
-Mat4 mat4_mul_mat4(Mat4 a, Mat4 b);
+vec4 multiply(Mat4 m, vec4 v);
+Mat4 multiply(Mat4 a, Mat4 b);
 
 
 #endif
