@@ -12,6 +12,7 @@
 #include "texture.h"
 #include "lib/upng.h"
 #include "camera.h"
+#include "clipping.h"
 
 #define FPS 200
 #define FRAME_TARGET_TIME (1000 / FPS)
@@ -31,17 +32,20 @@ void setup(void)
     color_buffer_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, window_width, window_height);
     z_buffer = (f32 *)malloc(sizeof(f32) * window_width * window_height);
 
-    f32 fov = M_PI / 3;
-    f32 aspect = (f32)window_height / window_width;
+    f32 aspect_x = (f32)window_width / window_height;
+    f32 aspect_y = (f32)window_height / window_width;    
+    f32 fov_y = M_PI / 3;
+    f32 fov_x = atan((tan(fov_y/2)*aspect_x))*2;    
     f32 z_near = 0.1;
     f32 z_far = 100.0;
-    projection = mat4_make_perspective(fov, aspect, z_near, z_far);
+    projection = mat4_make_perspective(fov_y, aspect_y, z_near, z_far);
+    init_frustrum_planes(fov_x, fov_y, z_near, z_far);
 
     // mesh_texture = (u32*) REDBRICK_TEXTURE;
 
-    g_mesh = load_obj_file("./assets/drone.obj");
+    g_mesh = load_obj_file("./assets/cube.obj");
     // load_cube_mesh();
-    load_png_texture_data("./assets/drone.png");
+    load_png_texture_data("./assets/cube.png");
 }
 
 void tear_down()
@@ -111,33 +115,32 @@ void process_input(f32 dt)
         // Movement
         else if (key == SDLK_w)
         {
-            camera.forward_velocity = multiply(camera.direction, 5.0*dt);
+            camera.forward_velocity = multiply(camera.direction, 5.0 * dt);
             camera.position = add(camera.position, camera.forward_velocity);
-        }        
+        }
         else if (key == SDLK_s)
         {
-            camera.forward_velocity = multiply(camera.direction, -5.0*dt);
+            camera.forward_velocity = multiply(camera.direction, -5.0 * dt);
             camera.position = add(camera.position, camera.forward_velocity);
         }
 
         else if (key == SDLK_a)
         {
-            camera.yaw += 1.0*dt;
+            camera.yaw += 1.0 * dt;
         }
         else if (key == SDLK_d)
         {
-            camera.yaw -= 1.0*dt;
-        }        
+            camera.yaw -= 1.0 * dt;
+        }
 
         else if (key == SDLK_UP)
         {
-            camera.position.y += 3*dt;
+            camera.position.y += 3 * dt;
         }
         else if (key == SDLK_DOWN)
         {
-            camera.position.y -= 3*dt;
-        }        
-
+            camera.position.y -= 3 * dt;
+        }
 
         break;
     }
@@ -159,10 +162,10 @@ vec3 get_normalv(vec4 points[3])
 }
 
 void update(f32 dt)
-{    
-    //g_mesh.rotation.x += 0.6 * dt;
-    //g_mesh.rotation.y += 0.6 * dt;
-    //g_mesh.rotation.z += 0.6 * dt;
+{
+    g_mesh.rotation.x += 0.6 * dt;
+    g_mesh.rotation.y += 0.6 * dt;
+    g_mesh.rotation.z += 0.6 * dt;
 
     g_mesh.scale.x = 1;
     g_mesh.scale.y = 1;
@@ -171,9 +174,8 @@ void update(f32 dt)
     // g_mesh.translation.y = 2;
     g_mesh.translation.z = 5;
 
-    
     vec3 up = {0, 1, 0};
-    vec3 target = { 0, 0, 1};
+    vec3 target = {0, 0, 1};
     Mat4 yaw = mat4_rotate_y(camera.yaw);
     camera.direction = to_vec3(multiply(yaw, to_vec4(target)));
     target = add(camera.position, camera.direction);
@@ -222,51 +224,72 @@ void update(f32 dt)
         f32 color_alignment = (1.0 + dot(triangle_normalv, color_direction)) / 2;
         color = light_apply_intensity(color, color_alignment);
 
-        vec4 projected_points[3];
-        for (int j = 0; j < 3; j++)
+        // Clipping
+        Polygon polygon = create_polygon_from_triangle(
+            to_vec3(transformed_verticies[0]),
+            to_vec3(transformed_verticies[1]),
+            to_vec3(transformed_verticies[2]),
+            face.a_uv,
+            face.b_uv,
+            face.c_uv
+        );
+
+        clip_polygon(&polygon);
+
+        printf("Nof vertices %d\n", polygon.num_vertices);
+        triangle triangles_after_clipping[MAX_NUM_POLY_TRIANGLES];
+        i32 num_triangles_after_clipping = 0;
+        triangles_from_polygon(&polygon, triangles_after_clipping, &num_triangles_after_clipping);
+
+        for (i32 t = 0; t < num_triangles_after_clipping; t++)
         {
-            projected_points[j] = mat4_mul_vec4_project(projection, transformed_verticies[j]);
+            triangle triangle_after_clipping = triangles_after_clipping[t];
+            vec4 projected_points[3];
+            for (int j = 0; j < 3; j++)
+            {
+                projected_points[j] = mat4_mul_vec4_project(projection, triangle_after_clipping.points[j]);
 
-            projected_points[j].x *= (window_width / 2.0);
-            projected_points[j].y *= (window_height / 2.0);
+                projected_points[j].x *= (window_width / 2.0);
+                projected_points[j].y *= (window_height / 2.0);
 
-            // Obj files have inverte y, thus we need to flip it.
-            projected_points[j].y *= -1;
+                // Obj files have inverte y, thus we need to flip it.
+                projected_points[j].y *= -1;
 
-            projected_points[j].x += (window_width / 2);
-            projected_points[j].y += (window_height / 2);
+                projected_points[j].x += (window_width / 2);
+                projected_points[j].y += (window_height / 2);
+            }
+
+            triangle triangle_to_render = {
+                .points = {
+                    {
+                        projected_points[0].x,
+                        projected_points[0].y,
+                        projected_points[0].z,
+                        projected_points[0].w,
+                    },
+                    {
+                        projected_points[1].x,
+                        projected_points[1].y,
+                        projected_points[1].z,
+                        projected_points[1].w,
+                    },
+                    {
+                        projected_points[2].x,
+                        projected_points[2].y,
+                        projected_points[2].z,
+                        projected_points[2].w,
+                    },
+                },
+                .texcoords = {
+                    {triangle_after_clipping.texcoords[0]},
+                    {triangle_after_clipping.texcoords[1]},
+                    {triangle_after_clipping.texcoords[2]},
+                },
+                .color = color,
+            };
+
+            triangles_to_render.push_back(triangle_to_render);
         }
-
-        triangle projected_triangle = {
-            .points = {
-                {
-                    projected_points[0].x,
-                    projected_points[0].y,
-                    projected_points[0].z,
-                    projected_points[0].w,
-                },
-                {
-                    projected_points[1].x,
-                    projected_points[1].y,
-                    projected_points[1].z,
-                    projected_points[1].w,
-                },
-                {
-                    projected_points[2].x,
-                    projected_points[2].y,
-                    projected_points[2].z,
-                    projected_points[2].w,
-                },
-            },
-            .texcoords = {
-                {face.a_uv},
-                {face.b_uv},
-                {face.c_uv},
-            },
-            .color = color,
-        };
-
-        triangles_to_render.push_back(projected_triangle);
     }
 }
 
@@ -285,7 +308,7 @@ void render(void)
             draw_filled_triangle(
                 points[0].x, points[0].y, points[0].z, points[0].w,
                 points[1].x, points[1].y, points[1].z, points[1].w,
-                points[2].x, points[2].y, points[2].z, points[2].w, 
+                points[2].x, points[2].y, points[2].z, points[2].w,
                 color);
         }
 
@@ -323,8 +346,8 @@ int main(void)
     setup();
 
     while (is_running)
-    {        
-        i32 time_to_wait = FRAME_TARGET_TIME - (SDL_GetTicks() - previous_frame_time);        
+    {
+        i32 time_to_wait = FRAME_TARGET_TIME - (SDL_GetTicks() - previous_frame_time);
         if (time_to_wait < 0)
         {
             fprintf(stdout, "Misssed frame target by %d ms.\n", time_to_wait);
@@ -332,13 +355,12 @@ int main(void)
         else if (time_to_wait <= FRAME_TARGET_TIME)
         {
             SDL_Delay(time_to_wait);
-        }        
-        f32 dt = (SDL_GetTicks() - previous_frame_time) / 1000.0;        
+        }
+        f32 dt = (SDL_GetTicks() - previous_frame_time) / 1000.0;
         previous_frame_time = SDL_GetTicks();
         process_input(dt);
         update(dt);
         render();
-        
     }
 
     destroy_window();

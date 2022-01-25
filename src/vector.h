@@ -47,6 +47,7 @@ f32 dot(vec3 a, vec3 b);
 vec3 to_vec3(vec4 v);
 void normalize(vec3 *v);
 vec3 normalize(vec3 v);
+vec3 clone(vec3 *v);
 
 // 4D
 
