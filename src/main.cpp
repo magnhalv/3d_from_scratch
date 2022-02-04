@@ -33,19 +33,19 @@ void setup(void)
     z_buffer = (f32 *)malloc(sizeof(f32) * window_width * window_height);
 
     f32 aspect_x = (f32)window_width / window_height;
-    f32 aspect_y = (f32)window_height / window_width;    
+    f32 aspect_y = (f32)window_height / window_width;
     f32 fov_y = M_PI / 3;
-    f32 fov_x = atan((tan(fov_y/2)*aspect_x))*2;    
+    f32 fov_x = atan((tan(fov_y / 2) * aspect_x)) * 2;
     f32 z_near = 0.1;
     f32 z_far = 100.0;
     projection = mat4_make_perspective(fov_y, aspect_y, z_near, z_far);
-    init_frustrum_planes(fov_x, fov_y, z_near, z_far);
+    init_frustum_planes(fov_x, fov_y, z_near, z_far);
 
     // mesh_texture = (u32*) REDBRICK_TEXTURE;
 
     g_mesh = load_obj_file("./assets/cube.obj");
     // load_cube_mesh();
-    load_png_texture_data("./assets/cube.png");
+    load_png_texture_data("./assets/f22.png");
 }
 
 void tear_down()
@@ -56,96 +56,101 @@ void tear_down()
 void process_input(f32 dt)
 {
     SDL_Event event;
-    SDL_PollEvent(&event);
-
-    switch (event.type)
+    while (SDL_PollEvent(&event))
     {
-    case SDL_QUIT:
-        is_running = false;
-        break;
-    case SDL_KEYDOWN:
-    {
-        SDL_Keycode key = event.key.keysym.sym;
-        if (key == SDLK_ESCAPE)
+        switch (event.type)
         {
+        case SDL_QUIT:
             is_running = false;
-        }
-        else if (key == SDLK_1)
+            break;
+        case SDL_KEYDOWN:
         {
-            render_options.draw_options = {0};
-            render_options.draw_options.dot = true;
-            render_options.draw_options.wireframe = true;
-        }
-        else if (key == SDLK_2)
-        {
-            render_options.draw_options = {0};
-            render_options.draw_options.wireframe = true;
-        }
-        else if (key == SDLK_3)
-        {
-            render_options.draw_options = {0};
-            render_options.draw_options.fill = true;
-        }
-        else if (key == SDLK_4)
-        {
-            render_options.draw_options = {0};
-            render_options.draw_options.wireframe = true;
-            render_options.draw_options.fill = true;
-        }
-        else if (key == SDLK_5)
-        {
-            render_options.draw_options = {0};
-            render_options.draw_options.texture = true;
-        }
-        else if (key == SDLK_6)
-        {
-            render_options.draw_options = {0};
-            render_options.draw_options.texture = true;
-            render_options.draw_options.wireframe = true;
-        }
-        else if (key == SDLK_b)
-        {
-            render_options.enable_back_face_culling = true;
-        }
-        else if (key == SDLK_x)
-        {
-            render_options.enable_back_face_culling = false;
-        }
+            SDL_Keycode key = event.key.keysym.sym;
+            if (key == SDLK_ESCAPE)
+            {
+                is_running = false;
+            }
+            else if (key == SDLK_1)
+            {
+                render_options.draw_options = {0};
+                render_options.draw_options.dot = true;
+                render_options.draw_options.wireframe = true;
+            }
+            else if (key == SDLK_2)
+            {
+                render_options.draw_options = {0};
+                render_options.draw_options.wireframe = true;
+            }
+            else if (key == SDLK_3)
+            {
+                render_options.draw_options = {0};
+                render_options.draw_options.fill = true;
+            }
+            else if (key == SDLK_4)
+            {
+                render_options.draw_options = {0};
+                render_options.draw_options.wireframe = true;
+                render_options.draw_options.fill = true;
+            }
+            else if (key == SDLK_5)
+            {
+                render_options.draw_options = {0};
+                render_options.draw_options.texture = true;
+            }
+            else if (key == SDLK_6)
+            {
+                render_options.draw_options = {0};
+                render_options.draw_options.texture = true;
+                render_options.draw_options.wireframe = true;
+            }
+            else if (key == SDLK_b)
+            {
+                render_options.enable_back_face_culling = true;
+            }
+            else if (key == SDLK_x)
+            {
+                render_options.enable_back_face_culling = false;
+            }
 
-        // Movement
-        else if (key == SDLK_w)
-        {
-            camera.forward_velocity = multiply(camera.direction, 5.0 * dt);
-            camera.position = add(camera.position, camera.forward_velocity);
-        }
-        else if (key == SDLK_s)
-        {
-            camera.forward_velocity = multiply(camera.direction, -5.0 * dt);
-            camera.position = add(camera.position, camera.forward_velocity);
-        }
+            // Movement
+            if (key == SDLK_w)
+            {
+                // camera.forward_velocity = multiply(camera.direction, 5.0 * dt);
+                // camera.position = add(camera.position, camera.forward_velocity);
+                g_mesh.translation.z -= 10.0 * dt;
+            }
+            if (key == SDLK_s)
+            {
+                // camera.forward_velocity = multiply(camera.direction, -5.0 * dt);
+                // camera.position = add(camera.position, camera.forward_velocity);
+                g_mesh.translation.z += 10.0 * dt;
+            }
 
-        else if (key == SDLK_a)
-        {
-            camera.yaw += 1.0 * dt;
-        }
-        else if (key == SDLK_d)
-        {
-            camera.yaw -= 1.0 * dt;
-        }
+            if (key == SDLK_a)
+            {
+                g_mesh.translation.x += 10.0 * dt;
+                // camera.yaw += 1.0 * dt;
+            }
+            if (key == SDLK_d)
+            {
+                g_mesh.translation.x -= 10.0 * dt;
+                // camera.yaw -= 1.0 * dt;
+            }
 
-        else if (key == SDLK_UP)
-        {
-            camera.position.y += 3 * dt;
-        }
-        else if (key == SDLK_DOWN)
-        {
-            camera.position.y -= 3 * dt;
-        }
+            else if (key == SDLK_UP)
+            {
+                camera.position.y += 3 * dt;
+            }
+            else if (key == SDLK_DOWN)
+            {
+                camera.position.y -= 3 * dt;
+            }
 
-        break;
-    }
-    default:
-        break;
+            break;
+        }
+        default:
+            break;
+        }
     }
 }
 
@@ -163,21 +168,18 @@ vec3 get_normalv(vec4 points[3])
 
 void update(f32 dt)
 {
-    g_mesh.rotation.x += 0.6 * dt;
-    g_mesh.rotation.y += 0.6 * dt;
-    g_mesh.rotation.z += 0.6 * dt;
+    // g_mesh.rotation.x += 0.6 * dt;
+    g_mesh.rotation.y = M_PI / 2;
+    // g_mesh.rotation.z += 0.6 * dt;
 
     g_mesh.scale.x = 1;
     g_mesh.scale.y = 1;
     g_mesh.scale.z = 1;
-    // g_mesh.translation.x = 3;
-    // g_mesh.translation.y = 2;
-    g_mesh.translation.z = 5;
 
     vec3 up = {0, 1, 0};
     vec3 target = {0, 0, 1};
-    Mat4 yaw = mat4_rotate_y(camera.yaw);
-    camera.direction = to_vec3(multiply(yaw, to_vec4(target)));
+    Mat4 pitch = mat4_rotate_x(camera.pitch);
+    camera.direction = to_vec3(multiply(pitch, to_vec4(target)));
     target = add(camera.position, camera.direction);
     view_matrix = look_at(camera.position, target, up);
 
@@ -231,12 +233,10 @@ void update(f32 dt)
             to_vec3(transformed_verticies[2]),
             face.a_uv,
             face.b_uv,
-            face.c_uv
-        );
+            face.c_uv);
 
         clip_polygon(&polygon);
 
-        printf("Nof vertices %d\n", polygon.num_vertices);
         triangle triangles_after_clipping[MAX_NUM_POLY_TRIANGLES];
         i32 num_triangles_after_clipping = 0;
         triangles_from_polygon(&polygon, triangles_after_clipping, &num_triangles_after_clipping);

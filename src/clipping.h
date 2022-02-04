@@ -29,7 +29,7 @@ typedef struct {
     i32 num_vertices;
 } Polygon;
 
-void init_frustrum_planes(f32 fov_x, f32 fov_y, f32 z_near, f32 z_far);
+void init_frustum_planes(f32 fov_x, f32 fov_y, f32 z_near, f32 z_far);
 Polygon create_polygon_from_triangle(vec3 a, vec3 b, vec3 c, Tex2 a_uv, Tex2 b_uv, Tex2 c_uv);
 void triangles_from_polygon(Polygon *polygon, triangle out_triangles[], i32 *num_out_triangles);
 void clip_polygon(Polygon *polygon);

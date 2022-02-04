@@ -1,9 +1,9 @@
 #include "clipping.h"
 
 #define NUM_PLANES 6
-Plane frustrum_planes[NUM_PLANES];
+Plane frustum_planes[NUM_PLANES];
 
-void init_frustrum_planes(f32 fov_x, f32 fov_y, f32 z_near, f32 z_far)
+void init_frustum_planes(f32 fov_x, f32 fov_y, f32 z_near, f32 z_far)
 {
     f32 cos_half_fov_y = cos(fov_y / 2);
     f32 sin_half_fov_y = sin(fov_y / 2);
@@ -13,31 +13,31 @@ void init_frustrum_planes(f32 fov_x, f32 fov_y, f32 z_near, f32 z_far)
 
     vec3 origin = {0, 0, 0};
 
-    frustrum_planes[LEFT_FRUSTUM_PLANE].point = origin;
-    frustrum_planes[LEFT_FRUSTUM_PLANE].normal.x = cos_half_fov_x;
-    frustrum_planes[LEFT_FRUSTUM_PLANE].normal.y = 0;
-    frustrum_planes[LEFT_FRUSTUM_PLANE].normal.z = sin_half_fov_x;
+    frustum_planes[LEFT_FRUSTUM_PLANE].point = origin;
+    frustum_planes[LEFT_FRUSTUM_PLANE].normal.x = cos_half_fov_x;
+    frustum_planes[LEFT_FRUSTUM_PLANE].normal.y = 0;
+    frustum_planes[LEFT_FRUSTUM_PLANE].normal.z = sin_half_fov_x;
 
-    frustrum_planes[RIGHT_FRUSTUM_PLANE].point = origin;
-    frustrum_planes[RIGHT_FRUSTUM_PLANE].normal.x = -cos_half_fov_x;
-    frustrum_planes[RIGHT_FRUSTUM_PLANE].normal.y = 0;
-    frustrum_planes[RIGHT_FRUSTUM_PLANE].normal.z = sin_half_fov_x;
+    frustum_planes[RIGHT_FRUSTUM_PLANE].point = origin;
+    frustum_planes[RIGHT_FRUSTUM_PLANE].normal.x = -cos_half_fov_x;
+    frustum_planes[RIGHT_FRUSTUM_PLANE].normal.y = 0;
+    frustum_planes[RIGHT_FRUSTUM_PLANE].normal.z = sin_half_fov_x;
 
-    frustrum_planes[TOP_FRUSTUM_PLANE].point = origin;
-    frustrum_planes[TOP_FRUSTUM_PLANE].normal.x = 0;
-    frustrum_planes[TOP_FRUSTUM_PLANE].normal.y = -cos_half_fov_y;
-    frustrum_planes[TOP_FRUSTUM_PLANE].normal.z = sin_half_fov_y;
+    frustum_planes[TOP_FRUSTUM_PLANE].point = origin;
+    frustum_planes[TOP_FRUSTUM_PLANE].normal.x = 0;
+    frustum_planes[TOP_FRUSTUM_PLANE].normal.y = -cos_half_fov_y;
+    frustum_planes[TOP_FRUSTUM_PLANE].normal.z = sin_half_fov_y;
 
-    frustrum_planes[BOTTOM_FRUSTUM_PLANE].point = origin;
-    frustrum_planes[BOTTOM_FRUSTUM_PLANE].normal.x = 0;
-    frustrum_planes[BOTTOM_FRUSTUM_PLANE].normal.y = cos_half_fov_y;
-    frustrum_planes[BOTTOM_FRUSTUM_PLANE].normal.z = sin_half_fov_y;
+    frustum_planes[BOTTOM_FRUSTUM_PLANE].point = origin;
+    frustum_planes[BOTTOM_FRUSTUM_PLANE].normal.x = 0;
+    frustum_planes[BOTTOM_FRUSTUM_PLANE].normal.y = cos_half_fov_y;
+    frustum_planes[BOTTOM_FRUSTUM_PLANE].normal.z = sin_half_fov_y;
 
-    frustrum_planes[NEAR_FRUSTUM_PLANE].point = {0, 0, z_near};
-    frustrum_planes[NEAR_FRUSTUM_PLANE].normal = {0, 0, 1};
+    frustum_planes[NEAR_FRUSTUM_PLANE].point = {0, 0, z_near};
+    frustum_planes[NEAR_FRUSTUM_PLANE].normal = {0, 0, 1};
 
-    frustrum_planes[FAR_FRUSTUM_PLANE].point = {0, 0, z_far};
-    frustrum_planes[FAR_FRUSTUM_PLANE].normal = {0, 0, -1};
+    frustum_planes[FAR_FRUSTUM_PLANE].point = {0, 0, z_far};
+    frustum_planes[FAR_FRUSTUM_PLANE].normal = {0, 0, -1};
 }
 
 Polygon create_polygon_from_triangle(vec3 a, vec3 b, vec3 c, Tex2 a_uv, Tex2 b_uv, Tex2 c_uv)
@@ -85,8 +85,8 @@ f32 linear_interpolation(f32 a, f32 b, f32 t) {
 
 void clip_polygon_against_plane(Polygon *polygon, i32 plane_index)
 {
-    vec3 plane_point = frustrum_planes[plane_index].point;
-    vec3 plane_normal = frustrum_planes[plane_index].normal;
+    vec3 plane_point = frustum_planes[plane_index].point;
+    vec3 plane_normal = frustum_planes[plane_index].normal;
 
     vec3 inside_vertices[MAX_NUM_POLY_VERTICES];
     Tex2 inside_texcoords[MAX_NUM_POLY_VERTICES];
