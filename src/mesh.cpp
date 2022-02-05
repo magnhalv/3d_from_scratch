@@ -7,7 +7,7 @@
 vec3 parse_vec_line(const char *line, i32 length);
 face parse_face_line(const char *line, i32 length);
 
-mesh g_mesh = {
+Mesh g_mesh = {
     .rotation = {0, 0, 0},
     .scale = {1, 1, 1},
     .translation = {0, 0, 0},
@@ -63,9 +63,9 @@ void load_cube_mesh(void)
     }
 }
 
-mesh load_obj_file(const char *file_name)
+Mesh load_obj_file(const char *file_name)
 {
-    mesh result = {};
+    Mesh result = {};
 
     FILE *file;
     file = fopen(file_name, "r");

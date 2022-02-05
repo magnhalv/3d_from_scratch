@@ -4,6 +4,7 @@
 #include <vector>
 #include <algorithm>
 
+#include "input.h"
 #include "display.h"
 #include "vector.h"
 #include "mesh.h"
@@ -19,11 +20,26 @@
 
 std::vector<triangle> triangles_to_render;
 
+typedef struct
+{
+    Mesh mesh; // should be shared
+    bool is_active;
+} Projectile;
+
+#define MAX_NUM_PROJECTILES 4
+typedef struct
+{
+    Projectile player_projectiles[MAX_NUM_PROJECTILES];
+    f32 projectile_pause;
+    i32 next_projectile;
+} GameState;
+
+GameState game_state = {};
+
 i32 previous_frame_time = 0;
 bool is_running;
 
 Mat4 projection;
-Mat4 world_matrix;
 Mat4 view_matrix;
 
 void setup(void)
@@ -43,7 +59,13 @@ void setup(void)
 
     // mesh_texture = (u32*) REDBRICK_TEXTURE;
 
-    g_mesh = load_obj_file("./assets/cube.obj");
+    g_mesh = load_obj_file("./assets/f22.obj");
+
+    for (i32 i = 0; i < MAX_NUM_PROJECTILES; i++)
+    {
+        game_state.player_projectiles[i].mesh = load_obj_file("./assets/cube.obj");
+    }
+
     // load_cube_mesh();
     load_png_texture_data("./assets/f22.png");
 }
@@ -53,7 +75,7 @@ void tear_down()
     free_texture();
 }
 
-void process_input(f32 dt)
+void process_input(GameControllerInput *input, f32 dt)
 {
     SDL_Event event;
     while (SDL_PollEvent(&event))
@@ -63,6 +85,34 @@ void process_input(f32 dt)
         case SDL_QUIT:
             is_running = false;
             break;
+        case SDL_KEYUP:
+        {
+            SDL_Keycode key = event.key.keysym.sym;
+            // Movement
+            if (key == SDLK_w)
+            {
+                input->move_up.ended_down = false;
+            }
+            if (key == SDLK_s)
+            {
+                input->move_down.ended_down = false;
+            }
+
+            if (key == SDLK_a)
+            {
+                input->move_left.ended_down = false;
+            }
+            if (key == SDLK_d)
+            {
+                input->move_right.ended_down = false;
+            }
+
+            if (key == SDLK_SPACE)
+            {
+                input->fire.ended_down = false;
+            }
+            break;
+        }
         case SDL_KEYDOWN:
         {
             SDL_Keycode key = event.key.keysym.sym;
@@ -70,44 +120,44 @@ void process_input(f32 dt)
             {
                 is_running = false;
             }
-            else if (key == SDLK_1)
+            if (key == SDLK_1)
             {
                 render_options.draw_options = {0};
                 render_options.draw_options.dot = true;
                 render_options.draw_options.wireframe = true;
             }
-            else if (key == SDLK_2)
+            if (key == SDLK_2)
             {
                 render_options.draw_options = {0};
                 render_options.draw_options.wireframe = true;
             }
-            else if (key == SDLK_3)
+            if (key == SDLK_3)
             {
                 render_options.draw_options = {0};
                 render_options.draw_options.fill = true;
             }
-            else if (key == SDLK_4)
+            if (key == SDLK_4)
             {
                 render_options.draw_options = {0};
                 render_options.draw_options.wireframe = true;
                 render_options.draw_options.fill = true;
             }
-            else if (key == SDLK_5)
+            if (key == SDLK_5)
             {
                 render_options.draw_options = {0};
                 render_options.draw_options.texture = true;
             }
-            else if (key == SDLK_6)
+            if (key == SDLK_6)
             {
                 render_options.draw_options = {0};
                 render_options.draw_options.texture = true;
                 render_options.draw_options.wireframe = true;
             }
-            else if (key == SDLK_b)
+            if (key == SDLK_b)
             {
                 render_options.enable_back_face_culling = true;
             }
-            else if (key == SDLK_x)
+            if (key == SDLK_x)
             {
                 render_options.enable_back_face_culling = false;
             }
@@ -115,37 +165,26 @@ void process_input(f32 dt)
             // Movement
             if (key == SDLK_w)
             {
-                // camera.forward_velocity = multiply(camera.direction, 5.0 * dt);
-                // camera.position = add(camera.position, camera.forward_velocity);
-                g_mesh.translation.z -= 10.0 * dt;
+                input->move_up.ended_down = true;
             }
             if (key == SDLK_s)
             {
-                // camera.forward_velocity = multiply(camera.direction, -5.0 * dt);
-                // camera.position = add(camera.position, camera.forward_velocity);
-                g_mesh.translation.z += 10.0 * dt;
+                input->move_down.ended_down = true;
             }
 
             if (key == SDLK_a)
             {
-                g_mesh.translation.x += 10.0 * dt;
-                // camera.yaw += 1.0 * dt;
+                input->move_left.ended_down = true;
             }
             if (key == SDLK_d)
             {
-                g_mesh.translation.x -= 10.0 * dt;
-                // camera.yaw -= 1.0 * dt;
+                input->move_right.ended_down = true;
             }
 
-            else if (key == SDLK_UP)
+            if (key == SDLK_SPACE)
             {
-                camera.position.y += 3 * dt;
+                input->fire.ended_down = true;
             }
-            else if (key == SDLK_DOWN)
-            {
-                camera.position.y -= 3 * dt;
-            }
-
             break;
         }
         default:
@@ -166,38 +205,21 @@ vec3 get_normalv(vec4 points[3])
     return normalv;
 }
 
-void update(f32 dt)
+void process_mesh(Mesh *mesh, std::vector<triangle> *triangles_to_render)
 {
-    // g_mesh.rotation.x += 0.6 * dt;
-    g_mesh.rotation.y = M_PI / 2;
-    // g_mesh.rotation.z += 0.6 * dt;
+    Mat4 world_matrix = mat4_scale(mesh->scale);
+    world_matrix = multiply(mat4_rotate_x(mesh->rotation.x), world_matrix);
+    world_matrix = multiply(mat4_rotate_y(mesh->rotation.y), world_matrix);
+    world_matrix = multiply(mat4_rotate_z(mesh->rotation.z), world_matrix);
+    world_matrix = multiply(mat4_translate(mesh->translation), world_matrix);
 
-    g_mesh.scale.x = 1;
-    g_mesh.scale.y = 1;
-    g_mesh.scale.z = 1;
-
-    vec3 up = {0, 1, 0};
-    vec3 target = {0, 0, 1};
-    Mat4 pitch = mat4_rotate_x(camera.pitch);
-    camera.direction = to_vec3(multiply(pitch, to_vec4(target)));
-    target = add(camera.position, camera.direction);
-    view_matrix = look_at(camera.position, target, up);
-
-    world_matrix = mat4_scale(g_mesh.scale);
-    world_matrix = multiply(mat4_rotate_x(g_mesh.rotation.x), world_matrix);
-    world_matrix = multiply(mat4_rotate_y(g_mesh.rotation.y), world_matrix);
-    world_matrix = multiply(mat4_rotate_z(g_mesh.rotation.z), world_matrix);
-    world_matrix = multiply(mat4_translate(g_mesh.translation), world_matrix);
-
-    triangles_to_render.clear();
-
-    for (unsigned int i = 0; i < g_mesh.faces.size(); i++)
+    for (unsigned int i = 0; i < mesh->faces.size(); i++)
     {
-        face face = g_mesh.faces[i];
+        face face = mesh->faces[i];
         vec3 face_verticies[3];
-        face_verticies[0] = g_mesh.vertices[face.a];
-        face_verticies[1] = g_mesh.vertices[face.b];
-        face_verticies[2] = g_mesh.vertices[face.c];
+        face_verticies[0] = mesh->vertices[face.a];
+        face_verticies[1] = mesh->vertices[face.b];
+        face_verticies[2] = mesh->vertices[face.c];
 
         vec4 transformed_verticies[3];
         for (int j = 0; j < 3; j++)
@@ -288,7 +310,84 @@ void update(f32 dt)
                 .color = color,
             };
 
-            triangles_to_render.push_back(triangle_to_render);
+            triangles_to_render->push_back(triangle_to_render);
+        }
+    }
+}
+
+void update(GameControllerInput *input, f32 dt)
+{
+    triangles_to_render.clear();
+    if (input->move_up.ended_down)
+    {
+        g_mesh.translation.z -= 10 * dt;
+    }
+    if (input->move_down.ended_down)
+    {
+        g_mesh.translation.z += 10 * dt;
+    }
+    if (input->move_left.ended_down)
+    {
+        g_mesh.translation.x += 10 * dt;
+        g_mesh.rotation.z = -M_PI / 8.0;
+    }
+    if (input->move_right.ended_down)
+    {
+        g_mesh.translation.x -= 10 * dt;
+        g_mesh.rotation.z = M_PI / 8.0;
+    }
+
+    if (input->fire.ended_down)
+    {
+        printf("Fire is down\n");
+        if (game_state.next_projectile < 4)
+        {
+            if (game_state.projectile_pause <= 0)
+            {
+                game_state.player_projectiles[game_state.next_projectile].is_active = true;
+                game_state.player_projectiles[game_state.next_projectile].mesh.translation.x = g_mesh.translation.x;
+                game_state.player_projectiles[game_state.next_projectile].mesh.translation.y = g_mesh.translation.y;
+                game_state.player_projectiles[game_state.next_projectile].mesh.translation.z = g_mesh.translation.z;
+                game_state.projectile_pause = 0.5;
+                game_state.next_projectile++;
+            }
+        }
+    }
+
+    if (game_state.projectile_pause > 0)
+    {
+        game_state.projectile_pause -= 1 * dt;
+    }
+
+    // g_mesh.rotation.x += 0.6 * dt;
+    g_mesh.rotation.y = M_PI / 2;
+    // g_mesh.rotation.z += 0.6 * dt;
+
+    g_mesh.scale.x = 1;
+    g_mesh.scale.y = 1;
+    g_mesh.scale.z = 1;
+
+    vec3 up = {0, 1, 0};
+    vec3 target = {0, 0, 1};
+    Mat4 pitch = mat4_rotate_x(camera.pitch);
+    camera.direction = to_vec3(multiply(pitch, to_vec4(target)));
+    target = add(camera.position, camera.direction);
+    view_matrix = look_at(camera.position, target, up);
+    process_mesh(&g_mesh, &triangles_to_render);
+
+    for (int i = 0; i < MAX_NUM_PROJECTILES; i++)
+    {
+        Projectile *projectile = &game_state.player_projectiles[i];
+        if (projectile->is_active)
+        {
+            Mesh *mesh = &projectile->mesh;
+            mesh->scale.x = 0.25;
+            mesh->scale.y = 0.25;
+            mesh->scale.z = 0.25;
+            mesh->rotation.x += 1.0 * dt;
+            mesh->rotation.y += 1.0 * dt;
+            mesh->translation.z -= 5 * dt;
+            process_mesh(&projectile->mesh, &triangles_to_render);
         }
     }
 }
@@ -344,22 +443,23 @@ int main(void)
     is_running = initialize_window();
 
     setup();
+    GameControllerInput input = {0};
 
     while (is_running)
     {
         i32 time_to_wait = FRAME_TARGET_TIME - (SDL_GetTicks() - previous_frame_time);
         if (time_to_wait < 0)
         {
-            fprintf(stdout, "Misssed frame target by %d ms.\n", time_to_wait);
+            // fprintf(stdout, "Misssed frame target by %d ms.\n", time_to_wait);
         }
         else if (time_to_wait <= FRAME_TARGET_TIME)
         {
             SDL_Delay(time_to_wait);
         }
-        f32 dt = (SDL_GetTicks() - previous_frame_time) / 1000.0;
+        f32 dt = (SDL_GetTicks() - previous_frame_time) / 1000.0; // in seconds
         previous_frame_time = SDL_GetTicks();
-        process_input(dt);
-        update(dt);
+        process_input(&input, dt);
+        update(&input, dt);
         render();
     }
 

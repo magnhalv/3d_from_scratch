@@ -19,11 +19,11 @@ typedef struct {
     vec3 rotation;
     vec3 scale;
     vec3 translation;
-} mesh;
+} Mesh;
 
 void load_cube_mesh(void);
-mesh load_obj_file(const char *file_name);
+Mesh load_obj_file(const char *file_name);
 
-extern mesh g_mesh;
+extern Mesh g_mesh;
 
 #endif
