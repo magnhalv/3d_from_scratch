@@ -59,7 +59,7 @@ void setup(void)
 
     // mesh_texture = (u32*) REDBRICK_TEXTURE;
 
-    g_mesh = load_obj_file("./assets/f22.obj");
+    g_mesh = load_obj_file("./assets/tank.obj");
 
     for (i32 i = 0; i < MAX_NUM_PROJECTILES; i++)
     {
@@ -206,7 +206,7 @@ vec3 get_normalv(vec4 points[3])
 }
 
 void process_mesh(Mesh *mesh, std::vector<triangle> *triangles_to_render)
-{
+{    
     Mat4 world_matrix = mat4_scale(mesh->scale);
     world_matrix = multiply(mat4_rotate_x(mesh->rotation.x), world_matrix);
     world_matrix = multiply(mat4_rotate_y(mesh->rotation.y), world_matrix);
@@ -337,9 +337,12 @@ void update(GameControllerInput *input, f32 dt)
         g_mesh.rotation.z = M_PI / 8.0;
     }
 
+    if (!input->move_left.ended_down && !input->move_right.ended_down) {
+        g_mesh.rotation.z = 0;
+    }
+
     if (input->fire.ended_down)
-    {
-        printf("Fire is down\n");
+    {        
         if (game_state.next_projectile < 4)
         {
             if (game_state.projectile_pause <= 0)
@@ -357,6 +360,21 @@ void update(GameControllerInput *input, f32 dt)
     if (game_state.projectile_pause > 0)
     {
         game_state.projectile_pause -= 1 * dt;
+    }
+
+    for (int i = 0; i < MAX_NUM_PROJECTILES; i++)
+    {
+        Projectile *projectile = &game_state.player_projectiles[i];
+        if (projectile->is_active)
+        {
+            Mesh *mesh = &projectile->mesh;
+            mesh->scale.x = 0.05;
+            mesh->scale.y = 0.05;
+            mesh->scale.z = 0.05;
+            mesh->rotation.x += 1.0 * dt;
+            mesh->rotation.y += 1.0 * dt;
+            mesh->translation.z -= 10 * dt;         
+        }
     }
 
     // g_mesh.rotation.x += 0.6 * dt;
@@ -380,13 +398,6 @@ void update(GameControllerInput *input, f32 dt)
         Projectile *projectile = &game_state.player_projectiles[i];
         if (projectile->is_active)
         {
-            Mesh *mesh = &projectile->mesh;
-            mesh->scale.x = 0.25;
-            mesh->scale.y = 0.25;
-            mesh->scale.z = 0.25;
-            mesh->rotation.x += 1.0 * dt;
-            mesh->rotation.y += 1.0 * dt;
-            mesh->translation.z -= 5 * dt;
             process_mesh(&projectile->mesh, &triangles_to_render);
         }
     }
