@@ -82,7 +82,7 @@ Mesh load_obj_file(const char *file_name)
             result.vertices.push_back(vec);
         }
 
-        if (strncmp(line, "vt ", 3) == 0) 
+        if (strncmp(line, "vt ", 3) == 0)
         {
             Tex2 texcoord;
             sscanf(line, "vt %f %f", &texcoord.u, &texcoord.v);
@@ -101,14 +101,86 @@ Mesh load_obj_file(const char *file_name)
                    &vertex_indicies[1], &texture_indices[1], &normal_indices[1],
                    &vertex_indicies[2], &texture_indices[2], &normal_indices[2]);
             face face = {
-                .a = vertex_indicies[0] - 1,                 
-                .b = vertex_indicies[1] - 1, 
-                .c = vertex_indicies[2] - 1, 
+                .a = vertex_indicies[0] - 1,
+                .b = vertex_indicies[1] - 1,
+                .c = vertex_indicies[2] - 1,
                 .a_uv = texcoords[texture_indices[0] - 1],
                 .b_uv = texcoords[texture_indices[1] - 1],
                 .c_uv = texcoords[texture_indices[2] - 1],
-                .color = 0xFFFFFFFF, };
+                .color = 0xFFFFFFFF,
+            };
             result.faces.push_back(face);
+        }
+    }
+
+    return result;
+}
+
+TankMesh load_tank_obj_file(const char *file_name)
+{
+    TankMesh result = {};
+    result.rotation = {0, 0, 0};
+    result.scale = {1, 1, 1};
+    result.translation = {0, 0, 0};
+    Mesh *mesh = &result.meshes[0];
+    i32 i = 0;
+
+    FILE *file;
+    file = fopen(file_name, "r");
+    char line[1024];
+
+    std::vector<Tex2> texcoords;
+
+    while (fgets(line, 1024, file))
+    {
+        if (line[0] == 'g' && line[1] == ' ')
+        {
+            mesh = &result.meshes[i];
+            mesh->rotation = {0, 0, 0};
+            mesh->scale = {1, 1, 1};
+            mesh->translation = {0, 0, 0};
+            i++;
+            texcoords.clear();
+        }
+
+        if (line[0] == 'v' && line[1] == ' ')
+        {
+            vec3 vec;
+            sscanf(line, "v %f %f %f", &vec.x, &vec.y, &vec.z);
+            // TODO: This is dumb. Fix later.
+            result.meshes[0].vertices.push_back(vec);
+            result.meshes[1].vertices.push_back(vec);
+            result.meshes[2].vertices.push_back(vec);
+        }
+
+        if (strncmp(line, "vt ", 3) == 0)
+        {
+            Tex2 texcoord;
+            sscanf(line, "vt %f %f", &texcoord.u, &texcoord.v);
+            // Invert the v coordinate
+            texcoord.v = 1.0 - texcoord.v;
+            texcoords.push_back(texcoord);
+        }
+
+        if (line[0] == 'f' && line[1] == ' ')
+        {
+            i32 vertex_indicies[3];
+            i32 texture_indices[3];
+            i32 normal_indices[3];
+            sscanf(line, "f %d/%d/%d %d/%d/%d %d/%d/%d",
+                   &vertex_indicies[0], &texture_indices[0], &normal_indices[0],
+                   &vertex_indicies[1], &texture_indices[1], &normal_indices[1],
+                   &vertex_indicies[2], &texture_indices[2], &normal_indices[2]);
+            face face = {
+                .a = vertex_indicies[0] - 1,
+                .b = vertex_indicies[1] - 1,
+                .c = vertex_indicies[2] - 1,
+                .a_uv = texcoords[texture_indices[0] - 1],
+                .b_uv = texcoords[texture_indices[1] - 1],
+                .c_uv = texcoords[texture_indices[2] - 1],
+                .color = 0xFFFFFFFF,
+            };
+            mesh->faces.push_back(face);
         }
     }
 

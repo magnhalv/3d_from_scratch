@@ -21,9 +21,17 @@ typedef struct {
     vec3 translation;
 } Mesh;
 
+typedef struct {
+    Mesh meshes[3]; //body, head, cannon
+    vec3 rotation;
+    vec3 scale;
+    vec3 translation;
+} TankMesh;
+
 void load_cube_mesh(void);
 Mesh load_obj_file(const char *file_name);
+TankMesh load_tank_obj_file(const char *file_name);
 
-extern Mesh g_mesh;
+//extern Mesh g_mesh;
 
 #endif

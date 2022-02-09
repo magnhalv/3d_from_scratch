@@ -42,6 +42,8 @@ bool is_running;
 Mat4 projection;
 Mat4 view_matrix;
 
+TankMesh tank;
+
 void setup(void)
 {
     color_buffer = (u32 *)malloc(sizeof(u32) * window_width * window_height);
@@ -59,7 +61,8 @@ void setup(void)
 
     // mesh_texture = (u32*) REDBRICK_TEXTURE;
 
-    g_mesh = load_obj_file("./assets/tank.obj");
+    //g_mesh = load_obj_file("./assets/tank.obj");
+    tank = load_tank_obj_file("./assets/tank.obj");
 
     for (i32 i = 0; i < MAX_NUM_PROJECTILES; i++)
     {
@@ -320,25 +323,25 @@ void update(GameControllerInput *input, f32 dt)
     triangles_to_render.clear();
     if (input->move_up.ended_down)
     {
-        g_mesh.translation.z -= 10 * dt;
+        tank.translation.z -= 10 * dt;
     }
     if (input->move_down.ended_down)
     {
-        g_mesh.translation.z += 10 * dt;
+        tank.translation.z += 10 * dt;
     }
     if (input->move_left.ended_down)
     {
-        g_mesh.translation.x += 10 * dt;
-        g_mesh.rotation.z = -M_PI / 8.0;
+        tank.translation.x += 10 * dt;
+        tank.rotation.z = -M_PI / 8.0;
     }
     if (input->move_right.ended_down)
     {
-        g_mesh.translation.x -= 10 * dt;
-        g_mesh.rotation.z = M_PI / 8.0;
+        tank.translation.x -= 10 * dt;
+        tank.rotation.z = M_PI / 8.0;
     }
 
     if (!input->move_left.ended_down && !input->move_right.ended_down) {
-        g_mesh.rotation.z = 0;
+        tank.rotation.z = 0;
     }
 
     if (input->fire.ended_down)
@@ -348,9 +351,9 @@ void update(GameControllerInput *input, f32 dt)
             if (game_state.projectile_pause <= 0)
             {
                 game_state.player_projectiles[game_state.next_projectile].is_active = true;
-                game_state.player_projectiles[game_state.next_projectile].mesh.translation.x = g_mesh.translation.x;
-                game_state.player_projectiles[game_state.next_projectile].mesh.translation.y = g_mesh.translation.y;
-                game_state.player_projectiles[game_state.next_projectile].mesh.translation.z = g_mesh.translation.z;
+                game_state.player_projectiles[game_state.next_projectile].mesh.translation.x = tank.translation.x;
+                game_state.player_projectiles[game_state.next_projectile].mesh.translation.y = tank.translation.y;
+                game_state.player_projectiles[game_state.next_projectile].mesh.translation.z = tank.translation.z;
                 game_state.projectile_pause = 0.5;
                 game_state.next_projectile++;
             }
@@ -378,12 +381,13 @@ void update(GameControllerInput *input, f32 dt)
     }
 
     // g_mesh.rotation.x += 0.6 * dt;
-    g_mesh.rotation.y = M_PI / 2;
-    // g_mesh.rotation.z += 0.6 * dt;
+    tank.rotation.y = M_PI / 2;
+    tank.meshes[1].rotation.y += 0.6 * dt;
+    tank.meshes[2].rotation.y += 0.6 * dt;
 
-    g_mesh.scale.x = 1;
-    g_mesh.scale.y = 1;
-    g_mesh.scale.z = 1;
+    tank.scale.x = 1;
+    tank.scale.y = 1;
+    tank.scale.z = 1;
 
     vec3 up = {0, 1, 0};
     vec3 target = {0, 0, 1};
@@ -391,7 +395,9 @@ void update(GameControllerInput *input, f32 dt)
     camera.direction = to_vec3(multiply(pitch, to_vec4(target)));
     target = add(camera.position, camera.direction);
     view_matrix = look_at(camera.position, target, up);
-    process_mesh(&g_mesh, &triangles_to_render);
+    process_mesh(&tank.meshes[0], &triangles_to_render);
+    process_mesh(&tank.meshes[1], &triangles_to_render);
+    process_mesh(&tank.meshes[2], &triangles_to_render);
 
     for (int i = 0; i < MAX_NUM_PROJECTILES; i++)
     {
