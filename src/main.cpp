@@ -61,7 +61,7 @@ void setup(void)
 
     // mesh_texture = (u32*) REDBRICK_TEXTURE;
 
-    //g_mesh = load_obj_file("./assets/tank.obj");
+    // g_mesh = load_obj_file("./assets/tank.obj");
     tank = load_tank_obj_file("./assets/tank.obj");
 
     for (i32 i = 0; i < MAX_NUM_PROJECTILES; i++)
@@ -208,13 +208,16 @@ vec3 get_normalv(vec4 points[3])
     return normalv;
 }
 
-void process_mesh(Mesh *mesh, std::vector<triangle> *triangles_to_render)
-{    
+void process_mesh(Mesh *mesh, std::vector<triangle> *triangles_to_render, vec3 *trans)
+{
+    vec3 negated = negative(trans);
+    vec3 translation = add(mesh->translation, negated);
     Mat4 world_matrix = mat4_scale(mesh->scale);
+    world_matrix = multiply(mat4_translate(*trans), world_matrix);
     world_matrix = multiply(mat4_rotate_x(mesh->rotation.x), world_matrix);
     world_matrix = multiply(mat4_rotate_y(mesh->rotation.y), world_matrix);
     world_matrix = multiply(mat4_rotate_z(mesh->rotation.z), world_matrix);
-    world_matrix = multiply(mat4_translate(mesh->translation), world_matrix);
+    world_matrix = multiply(mat4_translate(translation), world_matrix);
 
     for (unsigned int i = 0; i < mesh->faces.size(); i++)
     {
@@ -318,6 +321,48 @@ void process_mesh(Mesh *mesh, std::vector<triangle> *triangles_to_render)
     }
 }
 
+vec3 get_origin_delta_translation(Mesh *mesh) {
+    f32 x_max = -100;
+    f32 x_min = 100;
+    f32 y_max = -100;
+    f32 y_min = 100;
+    f32 z_max = -100;
+    f32 z_min = 100;
+    for (int i = 0; i < mesh->faces.size(); i++)
+    {
+        face f = mesh->faces[i];
+
+        vec3 v = mesh->vertices[f.a];
+        x_max = v.x > x_max ? v.x : x_max;
+        x_min = v.x < x_min ? v.x : x_min;
+        y_max = v.y > y_max ? v.y : y_max;
+        y_min = v.y < y_min ? v.y : y_min;
+        z_max = v.z > z_max ? v.z : z_max;
+        z_min = v.z < z_min ? v.z : z_min;
+
+        v = mesh->vertices[f.b];
+        x_max = v.x > x_max ? v.x : x_max;
+        x_min = v.x < x_min ? v.x : x_min;
+        y_max = v.y > y_max ? v.y : y_max;
+        y_min = v.y < y_min ? v.y : y_min;
+        z_max = v.z > z_max ? v.z : z_max;
+        z_min = v.z < z_min ? v.z : z_min;
+
+        v = mesh->vertices[f.c];
+        x_max = v.x > x_max ? v.x : x_max;
+        x_min = v.x < x_min ? v.x : x_min;
+        y_max = v.y > y_max ? v.y : y_max;
+        y_min = v.y < y_min ? v.y : y_min;
+        z_max = v.z > z_max ? v.z : z_max;
+        z_min = v.z < z_min ? v.z : z_min;
+    }
+    f32 d_x = -(x_max - ((x_max - x_min) / 2));
+    f32 d_y = -(y_max - ((y_max - y_min) / 2));
+    f32 d_z = -(z_max - ((z_max - z_min) / 2));
+    vec3 trans = {d_x, d_y, d_z};
+    return trans;
+}
+
 void update(GameControllerInput *input, f32 dt)
 {
     triangles_to_render.clear();
@@ -340,12 +385,13 @@ void update(GameControllerInput *input, f32 dt)
         tank.rotation.z = M_PI / 8.0;
     }
 
-    if (!input->move_left.ended_down && !input->move_right.ended_down) {
+    if (!input->move_left.ended_down && !input->move_right.ended_down)
+    {
         tank.rotation.z = 0;
     }
 
     if (input->fire.ended_down)
-    {        
+    {
         if (game_state.next_projectile < 4)
         {
             if (game_state.projectile_pause <= 0)
@@ -376,7 +422,7 @@ void update(GameControllerInput *input, f32 dt)
             mesh->scale.z = 0.05;
             mesh->rotation.x += 1.0 * dt;
             mesh->rotation.y += 1.0 * dt;
-            mesh->translation.z -= 10 * dt;         
+            mesh->translation.z -= 10 * dt;
         }
     }
 
@@ -395,18 +441,26 @@ void update(GameControllerInput *input, f32 dt)
     camera.direction = to_vec3(multiply(pitch, to_vec4(target)));
     target = add(camera.position, camera.direction);
     view_matrix = look_at(camera.position, target, up);
-    process_mesh(&tank.meshes[0], &triangles_to_render);
-    process_mesh(&tank.meshes[1], &triangles_to_render);
-    process_mesh(&tank.meshes[2], &triangles_to_render);
 
-    for (int i = 0; i < MAX_NUM_PROJECTILES; i++)
+    Mesh *mesh = &tank.meshes[1];
+    
+
+    vec3 none = {0, 0, 0};
+    vec3 trans1 = get_origin_delta_translation(&tank.meshes[1]);
+    vec3 trans2 = get_origin_delta_translation(&tank.meshes[2]);
+
+    process_mesh(&tank.meshes[0], &triangles_to_render, &none);
+    process_mesh(&tank.meshes[1], &triangles_to_render, &trans1);
+    process_mesh(&tank.meshes[2], &triangles_to_render, &trans1);
+
+    /* for (int i = 0; i < MAX_NUM_PROJECTILES; i++)
     {
         Projectile *projectile = &game_state.player_projectiles[i];
         if (projectile->is_active)
         {
             process_mesh(&projectile->mesh, &triangles_to_render);
         }
-    }
+    } */
 }
 
 void render(void)

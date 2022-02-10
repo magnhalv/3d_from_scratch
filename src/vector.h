@@ -48,6 +48,7 @@ vec3 to_vec3(vec4 v);
 void normalize(vec3 *v);
 vec3 normalize(vec3 v);
 vec3 clone(vec3 *v);
+vec3 negative(vec3 *v);
 
 // 4D
 

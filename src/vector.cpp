@@ -160,6 +160,11 @@ vec3 clone(vec3 *v) {
     return result;
 }
 
+vec3 negative(vec3 *v) {
+    vec3 result = {-v->x, -v->y, -v->z};
+    return result;
+}
+
 // 4D
 
 vec4 to_vec4(vec3 v) {
