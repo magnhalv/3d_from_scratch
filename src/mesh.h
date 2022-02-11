@@ -21,8 +21,10 @@ typedef struct {
     vec3 translation;
 } Mesh;
 
+#define N_TANK_MESHES 3
 typedef struct {
-    Mesh meshes[3]; //body, head, cannon
+    Mesh meshes[N_TANK_MESHES]; //body, head, cannon
+    vec3 origin_translations[N_TANK_MESHES];
     vec3 rotation;
     vec3 scale;
     vec3 translation;

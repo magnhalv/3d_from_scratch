@@ -321,48 +321,6 @@ void process_mesh(Mesh *mesh, std::vector<triangle> *triangles_to_render, vec3 *
     }
 }
 
-vec3 get_origin_delta_translation(Mesh *mesh) {
-    f32 x_max = -100;
-    f32 x_min = 100;
-    f32 y_max = -100;
-    f32 y_min = 100;
-    f32 z_max = -100;
-    f32 z_min = 100;
-    for (int i = 0; i < mesh->faces.size(); i++)
-    {
-        face f = mesh->faces[i];
-
-        vec3 v = mesh->vertices[f.a];
-        x_max = v.x > x_max ? v.x : x_max;
-        x_min = v.x < x_min ? v.x : x_min;
-        y_max = v.y > y_max ? v.y : y_max;
-        y_min = v.y < y_min ? v.y : y_min;
-        z_max = v.z > z_max ? v.z : z_max;
-        z_min = v.z < z_min ? v.z : z_min;
-
-        v = mesh->vertices[f.b];
-        x_max = v.x > x_max ? v.x : x_max;
-        x_min = v.x < x_min ? v.x : x_min;
-        y_max = v.y > y_max ? v.y : y_max;
-        y_min = v.y < y_min ? v.y : y_min;
-        z_max = v.z > z_max ? v.z : z_max;
-        z_min = v.z < z_min ? v.z : z_min;
-
-        v = mesh->vertices[f.c];
-        x_max = v.x > x_max ? v.x : x_max;
-        x_min = v.x < x_min ? v.x : x_min;
-        y_max = v.y > y_max ? v.y : y_max;
-        y_min = v.y < y_min ? v.y : y_min;
-        z_max = v.z > z_max ? v.z : z_max;
-        z_min = v.z < z_min ? v.z : z_min;
-    }
-    f32 d_x = -(x_max - ((x_max - x_min) / 2));
-    f32 d_y = -(y_max - ((y_max - y_min) / 2));
-    f32 d_z = -(z_max - ((z_max - z_min) / 2));
-    vec3 trans = {d_x, d_y, d_z};
-    return trans;
-}
-
 void update(GameControllerInput *input, f32 dt)
 {
     triangles_to_render.clear();
@@ -445,13 +403,11 @@ void update(GameControllerInput *input, f32 dt)
     Mesh *mesh = &tank.meshes[1];
     
 
-    vec3 none = {0, 0, 0};
-    vec3 trans1 = get_origin_delta_translation(&tank.meshes[1]);
-    vec3 trans2 = get_origin_delta_translation(&tank.meshes[2]);
+    vec3 none = {0, 0, 0};    
 
     process_mesh(&tank.meshes[0], &triangles_to_render, &none);
-    process_mesh(&tank.meshes[1], &triangles_to_render, &trans1);
-    process_mesh(&tank.meshes[2], &triangles_to_render, &trans1);
+    process_mesh(&tank.meshes[1], &triangles_to_render, &tank.origin_translations[1]);
+    process_mesh(&tank.meshes[2], &triangles_to_render, &tank.origin_translations[1]);
 
     /* for (int i = 0; i < MAX_NUM_PROJECTILES; i++)
     {

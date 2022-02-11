@@ -116,6 +116,48 @@ Mesh load_obj_file(const char *file_name)
     return result;
 }
 
+vec3 get_origin_delta_translation(Mesh *mesh) {
+    f32 x_max = -100;
+    f32 x_min = 100;
+    f32 y_max = -100;
+    f32 y_min = 100;
+    f32 z_max = -100;
+    f32 z_min = 100;
+    for (int i = 0; i < mesh->faces.size(); i++)
+    {
+        face f = mesh->faces[i];
+
+        vec3 v = mesh->vertices[f.a];
+        x_max = v.x > x_max ? v.x : x_max;
+        x_min = v.x < x_min ? v.x : x_min;
+        y_max = v.y > y_max ? v.y : y_max;
+        y_min = v.y < y_min ? v.y : y_min;
+        z_max = v.z > z_max ? v.z : z_max;
+        z_min = v.z < z_min ? v.z : z_min;
+
+        v = mesh->vertices[f.b];
+        x_max = v.x > x_max ? v.x : x_max;
+        x_min = v.x < x_min ? v.x : x_min;
+        y_max = v.y > y_max ? v.y : y_max;
+        y_min = v.y < y_min ? v.y : y_min;
+        z_max = v.z > z_max ? v.z : z_max;
+        z_min = v.z < z_min ? v.z : z_min;
+
+        v = mesh->vertices[f.c];
+        x_max = v.x > x_max ? v.x : x_max;
+        x_min = v.x < x_min ? v.x : x_min;
+        y_max = v.y > y_max ? v.y : y_max;
+        y_min = v.y < y_min ? v.y : y_min;
+        z_max = v.z > z_max ? v.z : z_max;
+        z_min = v.z < z_min ? v.z : z_min;
+    }
+    f32 d_x = -(x_max - ((x_max - x_min) / 2));
+    f32 d_y = -(y_max - ((y_max - y_min) / 2));
+    f32 d_z = -(z_max - ((z_max - z_min) / 2));
+    vec3 trans = {d_x, d_y, d_z};
+    return trans;
+}
+
 TankMesh load_tank_obj_file(const char *file_name)
 {
     TankMesh result = {};
@@ -182,6 +224,10 @@ TankMesh load_tank_obj_file(const char *file_name)
             };
             mesh->faces.push_back(face);
         }
+    }
+
+    for (int i = 0; i < N_TANK_MESHES; i++) {
+        result.origin_translations[i] = get_origin_delta_translation(&result.meshes[i]);
     }
 
     return result;
