@@ -18,7 +18,7 @@ bool initialize_window()
     }
 
     SDL_DisplayMode display_mode;
-    SDL_GetCurrentDisplayMode(0, &display_mode);    
+    SDL_GetCurrentDisplayMode(0, &display_mode);
     // window_width = 801;  // display_mode.w;
     // window_height = 601; // display_mode.h;
 
@@ -42,6 +42,9 @@ bool initialize_window()
         fprintf(stderr, "Unable to capture cursor.\n");
     }
 
+    SDL_Joystick *joystick;
+    SDL_JoystickEventState(SDL_ENABLE);
+    joystick = SDL_JoystickOpen(0);
     // SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
 
     return true;

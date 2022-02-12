@@ -1,11 +1,11 @@
 #include "camera.h"
 
 Camera camera = {
-    .position = {0.0, 0.0, -5.0},
+    .position = {-13.0, 11.8, -15.0},
     .direction = {0.0, 0.0, 0.0},
     .forward_velocity = {0.0, 0.0, 0.0},
-    .yaw = 0,
-    .pitch = 0};
+    .yaw = 0.79,
+    .pitch = 0.58};
 
 Camera dev_camera = {};
 

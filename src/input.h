@@ -9,11 +9,11 @@ typedef struct {
 } GameButtonState;
 
 typedef struct {
-  /* bool is_analog;
+  bool is_analog;
   bool is_connected;
 
   f32 stick_average_x;
-  f32 stick_average_y; */
+  f32 stick_average_y; 
 
   f32 cursor_dx;
   f32 cursor_dy;

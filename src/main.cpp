@@ -90,10 +90,26 @@ void process_input(GameControllerInput *input, f32 dt)
         case SDL_QUIT:
             is_running = false;
             break;
+        case SDL_JOYAXISMOTION:
+            // TODO: JOYAXISMOTION and SDL_KEYDOWN seems to both trigger together. Figure this out.
+            if ((event.jaxis.value < -3200) || (event.jaxis.value > 3200))
+            {
+                if (event.jaxis.axis == 0)
+                {
+                    input->stick_average_x = (f32)event.jaxis.value;
+                }
+
+                /* if (event.jaxis.axis == 1)
+                {
+                    //Up-Down movement code goes here
+                    printf("Up down: %d\n", event.jaxis.value);
+                } */
+            }
+            break;
         case SDL_MOUSEMOTION:
         {
             input->cursor_dx += (f32)event.motion.xrel;
-            input->cursor_dy += (f32)event.motion.yrel;            
+            input->cursor_dy += (f32)event.motion.yrel;
         }
         case SDL_KEYUP:
         {
@@ -404,8 +420,8 @@ void update(GameControllerInput *input, f32 dt)
 
     // g_mesh.rotation.x += 0.6 * dt;
     tank.rotation.y = M_PI / 2;
-    tank.meshes[1].rotation.y += 0.6 * dt;
-    tank.meshes[2].rotation.y += 0.6 * dt;
+    tank.meshes[1].rotation.y += input->stick_average_x * 0.00001 * dt;
+    tank.meshes[2].rotation.y += input->stick_average_x * 0.00001 * dt;
 
     tank.scale.x = 1;
     tank.scale.y = 1;
