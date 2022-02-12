@@ -15,6 +15,9 @@ typedef struct {
   f32 stick_average_x;
   f32 stick_average_y; */
 
+  f32 cursor_dx;
+  f32 cursor_dy;
+
   union
   {
     GameButtonState buttons[14];

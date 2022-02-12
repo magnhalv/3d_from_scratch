@@ -47,6 +47,8 @@
         "typeinfo": "cpp"
     },
     "cSpell.words": [
-        "SDLK"
+        "SDLK",
+        "xrel",
+        "yrel"
     ]
 }

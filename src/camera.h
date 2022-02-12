@@ -3,6 +3,7 @@
 
 #include "matrix.h"
 #include "math.h"
+#include "input.h"
 
 typedef struct {
     vec3 position;
@@ -11,6 +12,9 @@ typedef struct {
     f32 yaw;
     f32 pitch;
 } Camera;
+
+void update_camera(Camera *camera_out, GameControllerInput *input, f32 dt);
+Mat4 calculate_view_matrix(Camera *camera, GameControllerInput *input);
 
 extern Camera camera;
 

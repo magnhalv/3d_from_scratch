@@ -15,7 +15,7 @@
 #include "camera.h"
 #include "clipping.h"
 
-#define FPS 200
+#define FPS 60
 #define FRAME_TARGET_TIME (1000 / FPS)
 
 std::vector<triangle> triangles_to_render;
@@ -80,6 +80,8 @@ void tear_down()
 
 void process_input(GameControllerInput *input, f32 dt)
 {
+    input->cursor_dx = 0;
+    input->cursor_dy = 0;
     SDL_Event event;
     while (SDL_PollEvent(&event))
     {
@@ -88,6 +90,11 @@ void process_input(GameControllerInput *input, f32 dt)
         case SDL_QUIT:
             is_running = false;
             break;
+        case SDL_MOUSEMOTION:
+        {
+            input->cursor_dx += (f32)event.motion.xrel;
+            input->cursor_dy += (f32)event.motion.yrel;            
+        }
         case SDL_KEYUP:
         {
             SDL_Keycode key = event.key.keysym.sym;
@@ -364,6 +371,17 @@ void update(GameControllerInput *input, f32 dt)
         }
     }
 
+    camera.pitch += input->cursor_dy * 0.05 * dt;
+    camera.yaw += input->cursor_dx * 0.05 * dt;
+    if (camera.pitch > M_PI / 2)
+    {
+        camera.pitch = M_PI / 2;
+    }
+    if (camera.pitch < -M_PI / 2)
+    {
+        camera.pitch = -M_PI / 2;
+    }
+
     if (game_state.projectile_pause > 0)
     {
         game_state.projectile_pause -= 1 * dt;
@@ -393,17 +411,12 @@ void update(GameControllerInput *input, f32 dt)
     tank.scale.y = 1;
     tank.scale.z = 1;
 
-    vec3 up = {0, 1, 0};
-    vec3 target = {0, 0, 1};
-    Mat4 pitch = mat4_rotate_x(camera.pitch);
-    camera.direction = to_vec3(multiply(pitch, to_vec4(target)));
-    target = add(camera.position, camera.direction);
-    view_matrix = look_at(camera.position, target, up);
+    update_camera(&camera, input, dt);
+    view_matrix = calculate_view_matrix(&camera, input);
 
     Mesh *mesh = &tank.meshes[1];
-    
 
-    vec3 none = {0, 0, 0};    
+    vec3 none = {0, 0, 0};
 
     process_mesh(&tank.meshes[0], &triangles_to_render, &none);
     process_mesh(&tank.meshes[1], &triangles_to_render, &tank.origin_translations[1]);

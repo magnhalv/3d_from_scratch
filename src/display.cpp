@@ -1,13 +1,13 @@
 #include "display.h"
 
-u32 window_height = 800;
-u32 window_width = 1200;
+u32 window_height = 1200;
+u32 window_width = 1600;
 SDL_Window *window;
 SDL_Renderer *renderer;
 u32 *color_buffer = nullptr;
 f32 *z_buffer = nullptr;
 SDL_Texture *color_buffer_texture;
-RenderOptions render_options = { .draw_options = {.fill = true}, .enable_back_face_culling = true};
+RenderOptions render_options = {.draw_options = {.fill = true}, .enable_back_face_culling = true};
 
 bool initialize_window()
 {
@@ -18,13 +18,11 @@ bool initialize_window()
     }
 
     SDL_DisplayMode display_mode;
-    SDL_GetCurrentDisplayMode(0, &display_mode);
-
-    //window_width = 801;  // display_mode.w;
-    //window_height = 601; // display_mode.h;
+    SDL_GetCurrentDisplayMode(0, &display_mode);    
+    // window_width = 801;  // display_mode.w;
+    // window_height = 601; // display_mode.h;
 
     window = SDL_CreateWindow(NULL, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, window_width, window_height, SDL_WINDOW_BORDERLESS);
-
     if (!window)
     {
         fprintf(stderr, "Error creating SDL window.\n");
@@ -37,6 +35,11 @@ bool initialize_window()
     {
         fprintf(stderr, "Error creating SDL renderer.\n");
         return false;
+    }
+
+    if (SDL_CaptureMouse(SDL_TRUE) == -1)
+    {
+        fprintf(stderr, "Unable to capture cursor.\n");
     }
 
     // SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
@@ -52,10 +55,10 @@ void render_color_buffer()
 
 inline void draw_pixel(u32 x, u32 y, u32 color)
 {
-    if((x >= 0 && x < window_width) && (y >= 0 && y < window_height)) {
+    if ((x >= 0 && x < window_width) && (y >= 0 && y < window_height))
+    {
         color_buffer[y * window_width + x] = color;
     }
-    
 }
 
 void clear_color_buffer(u32 color)
@@ -75,19 +78,21 @@ void clear_z_buffer()
     {
         for (u32 x = 0; x < window_width; x++)
         {
-            z_buffer[(y*window_width) + x] = 1.0;
+            z_buffer[(y * window_width) + x] = 1.0;
         }
     }
 }
 
-void draw_triangle(i32 x0, i32 y0, i32 x1, i32 y1, i32 x2, i32 y2, u32 color) {
-        draw_line(x0, y0, x1, y1, color);
-        draw_line(x1, y1, x2, y2, color);
-        draw_line(x2, y2, x0, y0, color);
+void draw_triangle(i32 x0, i32 y0, i32 x1, i32 y1, i32 x2, i32 y2, u32 color)
+{
+    draw_line(x0, y0, x1, y1, color);
+    draw_line(x1, y1, x2, y2, color);
+    draw_line(x2, y2, x0, y0, color);
 }
 
 // DDA algorithm
-void draw_line(i32 x0, i32 y0, i32 x1, i32 y1, u32 color) {
+void draw_line(i32 x0, i32 y0, i32 x1, i32 y1, u32 color)
+{
     i32 delta_x = (x1 - x0);
     i32 delta_y = (y1 - y0);
 
@@ -99,7 +104,8 @@ void draw_line(i32 x0, i32 y0, i32 x1, i32 y1, u32 color) {
     f32 current_x = x0;
     f32 current_y = y0;
 
-    for (i32 i = 0; i <= side_length; i++) {
+    for (i32 i = 0; i <= side_length; i++)
+    {
         draw_pixel(round(current_x), round(current_y), color);
         current_x += inc_x;
         current_y += inc_y;
@@ -109,11 +115,11 @@ void draw_line(i32 x0, i32 y0, i32 x1, i32 y1, u32 color) {
 void draw_rect(u32 pos_x, u32 pos_y, u32 width, u32 height, u32 color)
 {
     for (u32 y = 0; y < height; y++)
-    {        
+    {
         for (u32 x = 0; x < width; x++)
         {
             draw_pixel(pos_x + x, pos_y + y, color);
-        }        
+        }
     }
 }
 
@@ -136,7 +142,7 @@ void draw_grid(void)
 
 void destroy_window(void)
 {
-    free(color_buffer);    
+    free(color_buffer);
     free(z_buffer);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
